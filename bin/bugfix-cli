@@ -36,7 +36,7 @@ else if (command === 'workflow:rollback') {
 }
 // Index commands
 else if (command === 'index:build') {
-  const builder = new IndexBuilder('.bugfix/index.json');
+  const builder = new IndexBuilder('.bugfix/index.db');
   builder.indexDirectory('./');
   builder.close();
   output({ success: true });

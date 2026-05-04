@@ -12,7 +12,14 @@
   "keywords": ["claude-code", "plugin", "bugfix", "tdd", "multi-repo"],
   "author": "",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-c": "^0.21.4",
+    "tree-sitter-cpp": "^0.22.3",
+    "tree-sitter-typescript": "^0.21.2",
+    "tree-sitter-python": "^0.21.0",
+    "better-sqlite3": "^11.5.0"
+  },
   "devDependencies": {},
   "engines": {
     "node": ">=20.0.0"
