@@ -38,7 +38,7 @@ plugins/workflow_bugfix/
 
 ```bash
 # 1. 添加本地市场
-/plugin add /home/roon/code_work/workflow_bug/.claude-plugin/marketplace.json
+/plugin add /path/to/workflow_bug/.claude-plugin/marketplace.json
 
 # 2. 安装插件
 /plugin install workflow_bugfix@local-workflow-marketplace
@@ -60,4 +60,4 @@ plugins/workflow_bugfix/
 ## 参考
 
 - 官方插件示例：`~/.claude/plugins/marketplaces/claude-plugins-official/`
-- 已工作的本地插件：`/home/roon/vibe/rutine/plugins/linux-app-copilot/`
+- 本地插件开发文档

@@ -9,7 +9,7 @@
 ### 1. 添加本地市场
 
 ```bash
-/plugin add /home/roon/code_work/workflow_bug/.claude-plugin/marketplace.json
+/plugin add /path/to/workflow_bug/.claude-plugin/marketplace.json
 ```
 
 ### 2. 安装插件
