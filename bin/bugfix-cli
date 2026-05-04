@@ -36,34 +36,42 @@ else if (command === 'workflow:rollback') {
 }
 // Index commands
 else if (command === 'index:build') {
-  const builder = new IndexBuilder('.bugfix/index.db');
-  builder.indexFile('./');
+  const builder = new IndexBuilder('.bugfix/index.json');
+  builder.indexDirectory('./');
   builder.close();
   output({ success: true });
 }
 else if (command === 'index:search-files') {
   const keywords = args.slice(1);
   const retriever = new ContextRetriever();
-  output(retriever.searchFiles(keywords));
-  retriever.close();
+  retriever.searchFiles(keywords).then(result => {
+    retriever.close();
+    output(result);
+  });
 }
 else if (command === 'index:search-symbols') {
   const name = args[1];
   const retriever = new ContextRetriever();
-  output(retriever.searchSymbols(name));
-  retriever.close();
+  retriever.searchSymbols(name).then(result => {
+    retriever.close();
+    output(result);
+  });
 }
 else if (command === 'index:trace-calls') {
   const symbol = args[1];
   const retriever = new ContextRetriever();
-  output(retriever.traceCalls(symbol));
-  retriever.close();
+  retriever.traceCalls(symbol).then(result => {
+    retriever.close();
+    output(result);
+  });
 }
 else if (command === 'index:analyze-impact') {
   const files = args.slice(1);
   const retriever = new ContextRetriever();
-  output(retriever.analyzeImpact(files));
-  retriever.close();
+  retriever.analyzeImpact(files).then(result => {
+    retriever.close();
+    output(result);
+  });
 }
 // Log commands
 else if (command === 'log:parse') {
