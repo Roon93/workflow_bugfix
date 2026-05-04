@@ -1,16 +1,33 @@
 ---
 name: feature
-description: 初始化功能开发工作流
+description: Start a feature development workflow. Use when the user requests a new feature or enhancement.
+user-invocable: true
 ---
 
-## 输入
+# /feature — Start Feature Development Workflow
 
-用户提供的需求描述
+Initialize a TDD-based feature development workflow with requirement analysis, test-first implementation, and verification.
 
-## 输出
+Arguments passed: `$ARGUMENTS`
 
-workflow 初始化成功，进入 ANALYSIS 阶段
+## Steps
 
-## 实现
+1. **Initialize workflow state**
+   - Create workflow ID: `FEAT-{timestamp}`
+   - Create `state/workflow.json` with phase: ANALYSIS
+   - Create git branch: `feature/{workflow-id}`
 
-调用 workflow.init 初始化工作流，派发给 bugfix-lead agent
+2. **Collect feature requirements**
+   - Feature description from `$ARGUMENTS`
+   - Constraints and boundaries
+   - Expected behavior
+
+3. **Start analysis phase**
+   - Invoke analyzer agent to clarify requirements
+   - Identify similar implementations
+   - Define change scope
+
+4. **Output**
+   - Workflow ID
+   - Current phase: ANALYSIS
+   - Next steps for the user

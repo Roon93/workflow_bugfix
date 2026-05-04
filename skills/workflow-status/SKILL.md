@@ -1,19 +1,26 @@
 ---
 name: status
-description: 查询当前工作流状态
+description: Check current workflow status. Use when the user asks about progress, current phase, or workflow state.
+user-invocable: true
 ---
 
-## 输入
+# /status — Check Workflow Status
 
-无
+Display the current state of the active workflow including phase, progress, and next steps.
 
-## 输出
+## Steps
 
-workflow 状态摘要，包括：
-- 当前阶段
-- 进度
-- Loop 轮数
+1. **Load workflow state**
+   - Read `state/workflow.json`
+   - If no active workflow, report that
 
-## 实现
+2. **Display status**
+   - Workflow ID and type (bugfix/feature)
+   - Current phase
+   - Phase completion status
+   - Loop count (if in FIX phase)
+   - Last checkpoint
 
-调用 workflow.load 读取状态，显示当前阶段、各阶段状态和 Loop 轮数
+3. **Output**
+   - Formatted status report
+   - Next recommended action

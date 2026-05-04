@@ -1,16 +1,30 @@
 ---
 name: rebuild-index
-description: 重建代码索引
+description: Rebuild the code index. Use when the codebase has changed significantly or the index is corrupted.
+user-invocable: true
 ---
 
-## 输入
+# /rebuild-index — Rebuild Code Index
 
-- `--full`（可选）：全量重建索引，默认为增量重建
+Rebuild the SQLite code index for symbol search, call tracing, and impact analysis.
 
-## 输出
+## Steps
 
-索引重建成功
+1. **Initialize index database**
+   - Create/recreate `.bugfix/index.db`
+   - Initialize schema (files, symbols, calls, dependencies, tests)
 
-## 实现
+2. **Scan codebase**
+   - Find all source files
+   - Parse with Tree-sitter
+   - Extract symbols (functions, classes, variables)
+   - Build call graph
 
-调用 index.build 重建代码索引，支持增量和全量两种模式
+3. **Store results**
+   - Insert into SQLite database
+   - Create indexes for fast lookup
+
+4. **Output**
+   - File count
+   - Symbol count
+   - Call relationship count

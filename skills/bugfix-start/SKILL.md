@@ -1,21 +1,33 @@
 ---
 name: bugfix
-description: 初始化 Bug 修复工作流
+description: Start a bug fixing workflow. Use when the user reports a bug, error, crash, or unexpected behavior.
+user-invocable: true
 ---
 
-## 输入
+# /bugfix — Start Bug Fixing Workflow
 
-- Bug 描述（必需）：问题现象、错误信息、复现步骤
-- 日志文件（可选）：崩溃日志、错误输出、堆栈跟踪
+Initialize a TDD-based bug fixing workflow with automatic root cause analysis, test reproduction, and verification.
 
-## 输出
+Arguments passed: `$ARGUMENTS`
 
-- workflow 初始化成功
-- 进入 ANALYSIS 阶段
-- 派发给 bugfix-lead agent
+## Steps
 
-## 实现
+1. **Initialize workflow state**
+   - Create workflow ID: `BUG-{timestamp}`
+   - Create `state/workflow.json` with phase: ANALYSIS
+   - Create git branch: `bugfix/{workflow-id}`
 
-1. 调用 workflow.init 初始化状态
-2. 创建 state/workflow.json（phase: ANALYSIS）
-3. 派发给 bugfix-lead agent 开始分析
+2. **Collect bug information**
+   - Bug description from `$ARGUMENTS`
+   - Error messages, stack traces, logs
+   - Reproduction steps
+
+3. **Start analysis phase**
+   - Invoke analyzer agent to classify the bug
+   - Identify key clues and candidate root causes
+   - Generate reproduction strategy
+
+4. **Output**
+   - Workflow ID
+   - Current phase: ANALYSIS
+   - Next steps for the user

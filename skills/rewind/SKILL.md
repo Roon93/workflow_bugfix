@@ -1,16 +1,33 @@
 ---
 name: rewind
-description: 回退到指定检查点
+description: Rewind to a previous checkpoint. Use when the user wants to undo changes or restart from an earlier phase.
+user-invocable: true
 ---
 
-## 输入
+# /rewind — Rewind to Checkpoint
 
-- checkpoint 标签（如 checkpoint-context）
+Rewind the workflow to a previous checkpoint, undoing subsequent changes.
 
-## 输出
+Arguments passed: `$ARGUMENTS` (checkpoint name: analysis, context, test, fix, verify)
 
-回退成功，恢复到指定阶段
+## Steps
 
-## 实现
+1. **Validate checkpoint**
+   - Parse checkpoint name from `$ARGUMENTS`
+   - List available checkpoints if none specified
+   - Verify checkpoint exists
 
-调用 workflow.rollback 和 git.rewind 恢复代码和状态
+2. **Rewind git state**
+   - Find checkpoint commit hash
+   - Reset to that commit
+   - Update working directory
+
+3. **Rewind workflow state**
+   - Update `state/workflow.json`
+   - Reset phase to checkpoint phase
+   - Clear subsequent phase data
+
+4. **Output**
+   - Checkpoint name
+   - Commit hash
+   - New current phase

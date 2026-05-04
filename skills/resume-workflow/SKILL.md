@@ -1,16 +1,29 @@
 ---
 name: resume
-description: 从中断点恢复工作流
+description: Resume an interrupted workflow. Use when the user wants to continue a paused or interrupted workflow.
+user-invocable: true
 ---
 
-## 输入
+# /resume — Resume Workflow
 
-无（自动从 state/ 读取）
+Resume an interrupted workflow from its last checkpoint.
 
-## 输出
+## Steps
 
-恢复到中断前的阶段
+1. **Load workflow state**
+   - Read `state/workflow.json`
+   - Verify workflow exists and is not completed
 
-## 实现
+2. **Restore context**
+   - Load phase-specific state
+   - Restore git branch
+   - Load last checkpoint
 
-调用 workflow.load 加载状态，派发给 bugfix-lead agent 继续执行
+3. **Continue execution**
+   - Resume from current phase
+   - Invoke appropriate agent
+
+4. **Output**
+   - Workflow ID
+   - Resumed phase
+   - Context summary
