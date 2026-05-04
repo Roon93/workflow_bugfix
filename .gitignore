@@ -3,3 +3,11 @@ node_modules/
 state/
 *.log
 .DS_Store
+
+# 开发过程文件
+prd.md
+spec.md
+task-plan.md
+reference-analysis.md
+*-SUMMARY.md
+FIX_*.md
