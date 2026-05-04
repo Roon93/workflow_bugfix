@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "local-workflow-marketplace",
+  "description": "Local marketplace for the Workflow Bugfix Claude Code plugin",
+  "owner": {
+    "name": "roonZhang",
+    "email": "roonmobi@126.com"
+  },
+  "plugins": [
+    {
+      "name": "workflow_bugfix",
+      "description": "Automated bug fixing and feature development workflow for existing codebases",
+      "author": {
+        "name": "roonZhang",
+        "email": "roonmobi@126.com"
+      },
+      "source": "./plugins/workflow_bugfix",
+      "category": "development",
+      "homepage": "https://github.com/your-org/workflow_bugfix"
+    }
+  ]
+}
