@@ -2,47 +2,46 @@
 
 ## 正确的结构
 
-插件目录结构：
 ```
 workflow_bug/
-├── .claude-plugin/
-│   └── plugin.json        # 插件元数据
-└── skills/                # 所有 skills
-    ├── bugfix-start/
-    │   └── SKILL.md
-    ├── feature-start/
-    │   └── SKILL.md
-    └── ...
+└── skills/
+    ├── bugfix/SKILL.md
+    ├── feature/SKILL.md
+    ├── status/SKILL.md
+    ├── resume/SKILL.md
+    ├── rewind/SKILL.md
+    └── rebuild-index/SKILL.md
 ```
 
-**重要**：`.claude-plugin/` 目录下只能有 `plugin.json`，不能有 `marketplace.json`
+**关键点**：
+- 不需要 `.claude-plugin/` 目录
+- skill 目录名必须与 `SKILL.md` 中的 `name` 字段一致
+- 插件名从仓库目录名推断（如 `workflow_bug`）
 
-## 安装步骤
-
-### 方法 1：使用 /plugin add（推荐）
+## 安装
 
 ```bash
-/plugin add /path/to/workflow_bug
+claude --plugin-dir /path/to/workflow_bug chat
 ```
 
-Claude Code 会自动识别 `.claude-plugin/plugin.json` 并安装插件。
-
-### 方法 2：符号链接
+## 验证
 
 ```bash
-ln -s /path/to/workflow_bug ~/.claude/plugins/data/workflow_bugfix
+claude --plugin-dir /path/to/workflow_bug -p "list available skills"
 ```
 
-## 验证安装
+应该看到：
+- `workflow_bug:bugfix` - 启动 bug 修复工作流
+- `workflow_bug:feature` - 启动功能开发工作流
+- `workflow_bug:status` - 查看工作流状态
+- `workflow_bug:resume` - 恢复工作流
+- `workflow_bug:rewind` - 回退工作流
+- `workflow_bug:rebuild-index` - 重建索引
+
+## 使用
 
 ```bash
-/help
+/workflow_bug:bugfix
+/workflow_bug:feature
+/workflow_bug:status
 ```
-
-应该能看到：
-- `/bugfix` - 启动 bug 修复工作流
-- `/feature-start` - 启动功能开发工作流
-- `/workflow-status` - 查看工作流状态
-- `/resume-workflow` - 恢复工作流
-- `/rewind` - 回退工作流
-- `/rebuild-index` - 重建索引
