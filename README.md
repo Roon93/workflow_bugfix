@@ -1,149 +1,149 @@
 # workflow_bugfix
 
-Automated bug fixing and feature development workflow plugin for Claude Code.
+Claude Code 自动化 Bug 修复和功能开发工作流插件。
 
-## Features
+## 功能特性
 
-- **TDD-driven bug fixing**: Write failing tests first, then fix
-- **Multi-repository support**: Sync branches and commits across repos
-- **Non-reproducible bug handling**: Three-level reproduction strategy
-- **Code graph analysis**: Blast radius, hub/bridge nodes, impact analysis
-- **Incremental indexing**: Fast code navigation with Tree-sitter
-- **Checkpoint & rewind**: Git-based state recovery
-- **7-phase workflow**: Analysis → Context → Test → Acceptance → Fix → Verify → Output
+- **TDD 驱动的 Bug 修复**：先写失败测试，再修复
+- **多仓库支持**：跨仓库同步分支和提交
+- **不可复现 Bug 处理**：三级复现策略
+- **代码图分析**：影响范围、关键节点、影响分析
+- **增量索引**：基于 Tree-sitter 的快速代码导航
+- **检查点与回退**：基于 Git 的状态恢复
+- **7 阶段工作流**：分析 → 上下文 → 测试 → 验收 → 修复 → 验证 → 输出
 
-## Installation
+## 安装
 
-### 1. Install Dependencies
+### 1. 安装依赖
 
 ```bash
 cd /path/to/workflow_bug
 npm install
 ```
 
-**Required dependencies:**
-- `tree-sitter` - Code parsing
-- `tree-sitter-c`, `tree-sitter-cpp`, `tree-sitter-typescript`, `tree-sitter-python` - Language parsers
-- `better-sqlite3` - Code index database
+**必需依赖：**
+- `tree-sitter` - 代码解析
+- `tree-sitter-c`, `tree-sitter-cpp`, `tree-sitter-typescript`, `tree-sitter-python` - 语言解析器
+- `better-sqlite3` - 代码索引数据库
 
-**System requirements:**
+**系统要求：**
 - Node.js >= 20.0.0
-- Python 3 (for building native modules)
-- C++ compiler (for better-sqlite3)
+- Python 3（用于构建原生模块）
+- C++ 编译器（用于 better-sqlite3）
 
-### 2. Use as Claude Code Plugin
+### 2. 作为 Claude Code 插件使用
 
 ```bash
 claude --plugin-dir /path/to/workflow_bug chat
 ```
 
-### 3. Use as Standalone CLI (Optional)
+### 3. 作为独立 CLI 使用（可选）
 
 ```bash
-# Make CLI executable
+# 使 CLI 可执行
 chmod +x bin/bugfix-cli
 
-# Add to PATH or use directly
+# 添加到 PATH 或直接使用
 ./bin/bugfix-cli workflow:init my-bugfix bugfix
 ```
 
-## Quick Start
+## 快速开始
 
-### As Claude Code Plugin
+### 作为 Claude Code 插件
 
 ```bash
-# Start bug fix workflow
+# 启动 bug 修复工作流
 /workflow_bug:bugfix
 
-# Start feature workflow
+# 启动功能开发工作流
 /workflow_bug:feature
 
-# Check status
+# 查看状态
 /workflow_bug:status
 
-# Resume workflow
+# 恢复工作流
 /workflow_bug:resume
 
-# Rewind to checkpoint
+# 回退到检查点
 /workflow_bug:rewind
 
-# Rebuild index
+# 重建索引
 /workflow_bug:rebuild-index
 ```
 
-### As Standalone CLI
+### 作为独立 CLI
 
 ```bash
-# Initialize workflow
+# 初始化工作流
 ./bin/bugfix-cli workflow:init my-bugfix bugfix
 
-# Build code index
+# 构建代码索引
 ./bin/bugfix-cli index:build
 
-# Search files
+# 搜索文件
 ./bin/bugfix-cli index:search-files memory leak
 
-# Search symbols
+# 搜索符号
 ./bin/bugfix-cli index:search-symbols process_data
 
-# Parse log file
+# 解析日志文件
 ./bin/bugfix-cli log:parse crash.log
 
-# Discover tests
+# 发现测试
 ./bin/bugfix-cli test:discover
 
-# Create git branch
+# 创建 git 分支
 ./bin/bugfix-cli git:create-branch bugfix/memory-leak
 
-# Tag checkpoint
-./bin/bugfix-cli git:tag-checkpoint checkpoint-analysis "Analysis complete"
+# 标记检查点
+./bin/bugfix-cli git:tag-checkpoint checkpoint-analysis "分析完成"
 ```
 
-## Available Skills
+## 可用技能
 
-When used as Claude Code plugin, the following skills are available:
+作为 Claude Code 插件使用时，可用以下技能：
 
-- **bugfix** - Start bug fixing workflow
-- **feature** - Start feature development workflow
-- **status** - Check workflow status
-- **resume** - Resume interrupted workflow
-- **rewind** - Rewind to previous checkpoint
-- **rebuild-index** - Rebuild code index
+- **bugfix** - 启动 bug 修复工作流
+- **feature** - 启动功能开发工作流
+- **status** - 查看工作流状态
+- **resume** - 恢复中断的工作流
+- **rewind** - 回退到之前的检查点
+- **rebuild-index** - 重建代码索引
 
-## CLI Commands
+## CLI 命令
 
-### Workflow Management
-- `workflow:init <id> <type>` - Initialize workflow
-- `workflow:load` - Load current state
-- `workflow:advance <phase>` - Advance to next phase
-- `workflow:rollback <phase> <tag>` - Rollback to checkpoint
+### 工作流管理
+- `workflow:init <id> <type>` - 初始化工作流
+- `workflow:load` - 加载当前状态
+- `workflow:advance <phase>` - 推进到下一阶段
+- `workflow:rollback <phase> <tag>` - 回退到检查点
 
-### Code Indexing
-- `index:build` - Build code index
-- `index:search-files <keywords...>` - Search files by keywords
-- `index:search-symbols <name>` - Search symbols by name
-- `index:trace-calls <symbol>` - Trace call chains
-- `index:analyze-impact <files...>` - Analyze change impact
+### 代码索引
+- `index:build` - 构建代码索引
+- `index:search-files <keywords...>` - 按关键词搜索文件
+- `index:search-symbols <name>` - 按名称搜索符号
+- `index:trace-calls <symbol>` - 追踪调用链
+- `index:analyze-impact <files...>` - 分析变更影响
 
-### Testing
-- `test:discover` - Discover test frameworks
-- `test:run <testFile>` - Run tests
+### 测试
+- `test:discover` - 发现测试框架
+- `test:run <testFile>` - 运行测试
 
-### Git Operations
-- `git:create-branch <name>` - Create branch
-- `git:commit <message>` - Commit changes
-- `git:tag-checkpoint <tag> <message>` - Create checkpoint
-- `git:rewind <tag>` - Rewind to checkpoint
+### Git 操作
+- `git:create-branch <name>` - 创建分支
+- `git:commit <message>` - 提交变更
+- `git:tag-checkpoint <tag> <message>` - 创建检查点
+- `git:rewind <tag>` - 回退到检查点
 
-### Log Analysis
-- `log:parse <logFile>` - Parse log file
-- `log:extract-clues <logFile>` - Extract clues from log
+### 日志分析
+- `log:parse <logFile>` - 解析日志文件
+- `log:extract-clues <logFile>` - 从日志提取线索
 
-## Configuration
+## 配置
 
-### Multi-repository setup
+### 多仓库设置
 
-Create `.bugfix/repos.json`:
+创建 `.bugfix/repos.json`：
 
 ```json
 {
@@ -166,9 +166,9 @@ Create `.bugfix/repos.json`:
 }
 ```
 
-### Log patterns
+### 日志模式
 
-Create `.bugfix/log-patterns.json`:
+创建 `.bugfix/log-patterns.json`：
 
 ```json
 {
@@ -181,88 +181,92 @@ Create `.bugfix/log-patterns.json`:
 }
 ```
 
-## Workflow Phases
+## 工作流阶段
 
-1. **ANALYSIS**: Analyze bug/feature, extract clues, generate hypotheses
-2. **CONTEXT**: Locate relevant files, symbols, call chains
-3. **TEST**: Write failing test (reproduce bug or test feature)
-4. **ACCEPTANCE**: Define acceptance criteria
-5. **FIX**: Implement fix/feature with TDD loop (max 5 rounds)
-6. **VERIFY**: Run regression tests, analyze impact
-7. **OUTPUT**: Generate report and result JSON
+1. **分析（ANALYSIS）**：分析 bug/功能，提取线索，生成假设
+2. **上下文（CONTEXT）**：定位相关文件、符号、调用链
+3. **测试（TEST）**：编写失败测试（复现 bug 或测试功能）
+4. **验收（ACCEPTANCE）**：定义验收标准
+5. **修复（FIX）**：实现修复/功能，TDD 循环（最多 5 轮）
+6. **验证（VERIFY）**：运行回归测试，分析影响
+7. **输出（OUTPUT）**：生成报告和结果 JSON
 
-## Architecture
+## 架构
 
-- **Skills**: User-facing commands (`/bugfix`, `/feature`, etc.)
-- **Agents**: Specialized agents (analyzer, locator, tester, fixer, verifier)
-- **CLI Tools**: Standalone command-line interface
-- **State**: JSON files in `state/` directory
-- **Index**: SQLite database in `.bugfix/index.db`
+- **技能（Skills）**：面向用户的命令（`/bugfix`、`/feature` 等）
+- **代理（Agents）**：专用代理（分析器、定位器、测试器、修复器、验证器）
+- **CLI 工具**：独立命令行界面
+- **状态（State）**：`state/` 目录中的 JSON 文件
+- **索引（Index）**：`.bugfix/index.db` 中的 SQLite 数据库
 
-## Supported Languages
+## 支持的语言
 
-- C/C++ (gtest, catch2)
-- TypeScript/JavaScript (jest, vitest, mocha)
-- Python (pytest, unittest)
+- C/C++（gtest、catch2）
+- TypeScript/JavaScript（jest、vitest、mocha）
+- Python（pytest、unittest）
 
-## State Files
+## 状态文件
 
-- `state/workflow.json` - Workflow state
-- `state/analysis/confirmed.json` - Analysis result
-- `state/context/scope.json` - Context scope
-- `state/reproduce/test-result.json` - Test result
-- `state/acceptance/confirmed.json` - Acceptance criteria
-- `state/fix/success.json` - Fix result
-- `state/verify/report.json` - Verification report
-- `state/output/result.json` - Final output
+- `state/workflow.json` - 工作流状态
+- `state/analysis/confirmed.json` - 分析结果
+- `state/context/scope.json` - 上下文范围
+- `state/reproduce/test-result.json` - 测试结果
+- `state/acceptance/confirmed.json` - 验收标准
+- `state/fix/success.json` - 修复结果
+- `state/verify/report.json` - 验证报告
+- `state/output/result.json` - 最终输出
 
-## Development
+## 开发
 
 ```bash
-# Run tests
+# 运行测试
 npm test
 
-# Run specific test
+# 运行特定测试
 npm test -- test/state-manager.test.js
 
-# Build index
+# 构建索引
 ./bin/bugfix-cli index:build
 
-# Check workflow
+# 检查工作流
 ./bin/bugfix-cli workflow:load
 ```
 
-## Troubleshooting
+## 故障排除
 
-### Installation fails
+### 安装失败
 
-If `npm install` fails with native module errors:
+如果 `npm install` 因原生模块错误失败：
 
 ```bash
-# Install build tools (Ubuntu/Debian)
+# 安装构建工具（Ubuntu/Debian）
 sudo apt-get install build-essential python3
 
-# Install build tools (macOS)
+# 安装构建工具（macOS）
 xcode-select --install
 
-# Install build tools (Windows)
+# 安装构建工具（Windows）
 npm install --global windows-build-tools
 ```
 
-### Skills not showing up
+### 技能未显示
 
-Verify plugin structure:
+验证插件结构：
 
 ```bash
 ./verify-plugin.sh
 ```
 
-Test plugin loading:
+确保：
+- skill 目录名与 `SKILL.md` 中的 `name` 字段匹配
+- 所有 `SKILL.md` 文件都有正确的 frontmatter
+
+### CLI 无法执行
 
 ```bash
-claude --plugin-dir /path/to/workflow_bug -p "list available skills"
+chmod +x bin/bugfix-cli
 ```
 
-## License
+## 许可证
 
 MIT
