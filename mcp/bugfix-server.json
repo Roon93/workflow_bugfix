@@ -1,0 +1,244 @@
+{
+  "mcpServers": {
+    "bugfix": {
+      "command": "node",
+      "args": ["bin/bugfix-cli"],
+      "env": {},
+      "tools": [
+        {
+          "name": "workflow.init",
+          "description": "Initialize a new workflow",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "workflowId": { "type": "string" },
+              "type": { "type": "string", "enum": ["bugfix", "feature"] },
+              "repos": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["workflowId", "type"]
+          }
+        },
+        {
+          "name": "workflow.load",
+          "description": "Load current workflow state",
+          "inputSchema": { "type": "object", "properties": {} }
+        },
+        {
+          "name": "workflow.advance",
+          "description": "Advance to next phase",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "phase": { "type": "string" },
+              "checkpoint": { "type": "boolean", "default": true }
+            },
+            "required": ["phase"]
+          }
+        },
+        {
+          "name": "workflow.rollback",
+          "description": "Rollback to a checkpoint",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "phase": { "type": "string" },
+              "checkpointTag": { "type": "string" }
+            },
+            "required": ["phase", "checkpointTag"]
+          }
+        },
+        {
+          "name": "log.parse",
+          "description": "Parse log file",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "logFile": { "type": "string" }
+            },
+            "required": ["logFile"]
+          }
+        },
+        {
+          "name": "log.extract-clues",
+          "description": "Extract clues from log",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "logFile": { "type": "string" },
+              "keywords": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["logFile"]
+          }
+        },
+        {
+          "name": "index.build",
+          "description": "Build code index",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "repos": { "type": "array", "items": { "type": "string" } },
+              "incremental": { "type": "boolean", "default": true }
+            }
+          }
+        },
+        {
+          "name": "index.search-files",
+          "description": "Search files by keywords",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "keywords": { "type": "array", "items": { "type": "string" } },
+              "repos": { "type": "array", "items": { "type": "string" } },
+              "language": { "type": "string" },
+              "maxResults": { "type": "integer", "default": 50 }
+            },
+            "required": ["keywords"]
+          }
+        },
+        {
+          "name": "index.search-symbols",
+          "description": "Search symbols by name",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "type": "string" },
+              "repos": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["name"]
+          }
+        },
+        {
+          "name": "index.trace-calls",
+          "description": "Trace call chains",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "symbol": { "type": "string" },
+              "direction": { "type": "string", "enum": ["callers", "callees", "both"], "default": "both" },
+              "maxDepth": { "type": "integer", "default": 3 }
+            },
+            "required": ["symbol"]
+          }
+        },
+        {
+          "name": "index.analyze-impact",
+          "description": "Analyze impact of changes",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "files": { "type": "array", "items": { "type": "string" } },
+              "symbols": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["files"]
+          }
+        },
+        {
+          "name": "test.discover",
+          "description": "Discover test frameworks and files",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "repos": { "type": "array", "items": { "type": "string" } },
+              "languages": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        {
+          "name": "test.run",
+          "description": "Run tests",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "testFile": { "type": "string" },
+              "testName": { "type": "string" },
+              "framework": { "type": "string" },
+              "timeout": { "type": "integer", "default": 30000 }
+            },
+            "required": ["testFile"]
+          }
+        },
+        {
+          "name": "git.create-branch",
+          "description": "Create branch in repos",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "branchName": { "type": "string" },
+              "baseBranch": { "type": "string", "default": "main" },
+              "repos": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["branchName"]
+          }
+        },
+        {
+          "name": "git.commit",
+          "description": "Commit changes in repos",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "message": { "type": "string" },
+              "files": { "type": "array", "items": { "type": "string" } },
+              "repos": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["message"]
+          }
+        },
+        {
+          "name": "git.tag-checkpoint",
+          "description": "Create checkpoint tag",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "tag": { "type": "string" },
+              "message": { "type": "string" },
+              "repos": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["tag"]
+          }
+        },
+        {
+          "name": "git.rewind",
+          "description": "Rewind to checkpoint",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "checkpointTag": { "type": "string" },
+              "repos": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["checkpointTag"]
+          }
+        },
+        {
+          "name": "repo.list",
+          "description": "List configured repos",
+          "inputSchema": { "type": "object", "properties": {} }
+        },
+        {
+          "name": "repo.sync-branches",
+          "description": "Sync branches across repos",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "branchName": { "type": "string" },
+              "repos": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["branchName"]
+          }
+        },
+        {
+          "name": "repo.sync-commits",
+          "description": "Sync commits across repos",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "message": { "type": "string" },
+              "repos": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["message"]
+          }
+        }
+      ]
+    }
+  }
+}

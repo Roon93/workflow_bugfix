@@ -1,0 +1,39 @@
+{
+  "id": "{{WORKFLOW_ID}}",
+  "type": "bugfix",
+  "status": "in_progress",
+  "currentPhase": "ANALYSIS",
+  "createdAt": "{{CREATED_AT}}",
+  "updatedAt": "{{UPDATED_AT}}",
+  "phases": {
+    "ANALYSIS": {
+      "status": "in_progress",
+      "startedAt": "{{CREATED_AT}}"
+    },
+    "CONTEXT": {
+      "status": "pending"
+    },
+    "TEST": {
+      "status": "pending"
+    },
+    "ACCEPTANCE": {
+      "status": "pending"
+    },
+    "FIX": {
+      "status": "pending"
+    },
+    "VERIFY": {
+      "status": "pending"
+    },
+    "OUTPUT": {
+      "status": "pending"
+    }
+  },
+  "loop": {
+    "currentRound": 0,
+    "maxRounds": 5,
+    "history": []
+  },
+  "repos": [],
+  "speculativeFix": false
+}

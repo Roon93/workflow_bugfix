@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["id", "type", "status", "currentPhase", "createdAt", "updatedAt", "phases", "loop"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Workflow unique identifier"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["bugfix", "feature"],
+      "description": "Workflow type"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["in_progress", "completed", "failed"],
+      "description": "Overall workflow status"
+    },
+    "currentPhase": {
+      "type": "string",
+      "enum": ["ANALYSIS", "CONTEXT", "TEST", "ACCEPTANCE", "FIX", "VERIFY", "OUTPUT"],
+      "description": "Current execution phase"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Workflow creation timestamp"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
+    },
+    "phases": {
+      "type": "object",
+      "description": "Status of each phase",
+      "properties": {
+        "ANALYSIS": { "$ref": "#/definitions/phase" },
+        "CONTEXT": { "$ref": "#/definitions/phase" },
+        "TEST": { "$ref": "#/definitions/phase" },
+        "ACCEPTANCE": { "$ref": "#/definitions/phase" },
+        "FIX": { "$ref": "#/definitions/phase" },
+        "VERIFY": { "$ref": "#/definitions/phase" },
+        "OUTPUT": { "$ref": "#/definitions/phase" }
+      }
+    },
+    "loop": {
+      "type": "object",
+      "required": ["currentRound", "maxRounds", "history"],
+      "properties": {
+        "currentRound": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Current iteration round"
+        },
+        "maxRounds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum allowed rounds"
+        },
+        "history": {
+          "type": "array",
+          "description": "History of previous rounds",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "repos": {
+      "type": "array",
+      "description": "List of repositories involved",
+      "items": {
+        "type": "string"
+      }
+    },
+    "speculativeFix": {
+      "type": "boolean",
+      "description": "Whether speculative fix is enabled"
+    }
+  },
+  "definitions": {
+    "phase": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "failed"],
+          "description": "Phase status"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Phase start timestamp"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Phase completion timestamp"
+        },
+        "checkpoint": {
+          "type": "string",
+          "description": "Checkpoint identifier for this phase"
+        }
+      }
+    }
+  }
+}

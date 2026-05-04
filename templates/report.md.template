@@ -1,0 +1,40 @@
+# {{WORKFLOW_TYPE}} 报告
+
+## 概述
+- **Workflow ID**: {{WORKFLOW_ID}}
+- **类型**: {{WORKFLOW_TYPE}}
+- **状态**: {{STATUS}}
+- **耗时**: {{DURATION}}
+- **推测性修复**: {{SPECULATIVE_FIX}}
+
+## 问题分析
+- **问题分类**: {{CLASSIFICATION}}
+- **关键线索**: {{KEY_CLUES}}
+- **根因假设**: {{ROOT_CAUSE_HYPOTHESIS}}
+- **复现策略**: {{REPRODUCE_STRATEGY}}
+- **置信度**: {{CONFIDENCE}}
+
+## 上下文范围
+- **相关文件**: {{RELEVANT_FILES}}
+- **相关符号**: {{RELEVANT_SYMBOLS}}
+- **影响面**: {{IMPACT_SCOPE}}
+
+## 修复/实现方案
+- **改动仓库**: {{REPOS}}
+- **改动文件**: {{CHANGED_FILES}}
+- **改动行数**: +{{LINES_ADDED}} -{{LINES_REMOVED}}
+- **测试覆盖**: {{TEST_COVERAGE}}
+- **Loop 轮数**: {{LOOP_ROUNDS}}
+
+## 验证结果
+- **回归测试**: {{REGRESSION_STATUS}}
+- **单元测试**: {{UNIT_TESTS}}
+- **集成测试**: {{INTEGRATION_TESTS}}
+- **影响面分析**: {{IMPACT_ANALYSIS}}
+- **风险评估**: {{RISK_LEVEL}}
+
+## 建议
+{{RECOMMENDATIONS}}
+
+## 注意事项
+{{NOTES}}

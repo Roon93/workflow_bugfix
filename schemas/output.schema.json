@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schema_version", "workflow", "analysis", "context", "changes", "tests", "verification", "recommendations"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "workflow": {
+      "type": "object",
+      "required": ["id", "type", "status", "created_at", "completed_at", "duration_seconds", "speculative_fix", "requires_real_device_verification"],
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"type": "string", "enum": ["bugfix", "feature"]},
+        "status": {"type": "string", "enum": ["success", "failed", "partial", "speculative"]},
+        "created_at": {"type": "string", "format": "date-time"},
+        "completed_at": {"type": "string", "format": "date-time"},
+        "duration_seconds": {"type": "integer", "minimum": 0},
+        "speculative_fix": {"type": "boolean"},
+        "requires_real_device_verification": {"type": "boolean"}
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "required": ["classification", "key_clues", "root_cause_hypothesis", "reproduce_strategy", "confidence"],
+      "properties": {
+        "classification": {"type": "string"},
+        "key_clues": {"type": "array", "items": {"type": "string"}},
+        "root_cause_hypothesis": {"type": "array", "items": {"type": "string"}},
+        "reproduce_strategy": {"type": "string", "enum": ["code_level", "conditional", "speculative"]},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"]}
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["repos", "files", "symbols", "call_chains", "impact_scope"],
+      "properties": {
+        "repos": {"type": "array", "items": {"type": "string"}},
+        "files": {"type": "array", "items": {"type": "string"}},
+        "symbols": {"type": "array", "items": {"type": "string"}},
+        "call_chains": {"type": "array", "items": {"type": "string"}},
+        "impact_scope": {"type": "string"}
+      }
+    },
+    "changes": {
+      "type": "object",
+      "required": ["repos", "total_lines_added", "total_lines_removed"],
+      "properties": {
+        "repos": {
+          "type": "object",
+          "patternProperties": {
+            ".*": {
+              "type": "object",
+              "required": ["branch", "files_modified", "commits"],
+              "properties": {
+                "branch": {"type": "string"},
+                "files_modified": {"type": "array", "items": {"type": "string"}},
+                "commits": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        },
+        "total_lines_added": {"type": "integer", "minimum": 0},
+        "total_lines_removed": {"type": "integer", "minimum": 0}
+      }
+    },
+    "tests": {
+      "type": "object",
+      "required": ["reproduce_test", "test_results", "regression_tests"],
+      "properties": {
+        "reproduce_test": {"type": "string"},
+        "test_results": {
+          "type": "object",
+          "required": ["passed", "failed", "skipped"],
+          "properties": {
+            "passed": {"type": "integer", "minimum": 0},
+            "failed": {"type": "integer", "minimum": 0},
+            "skipped": {"type": "integer", "minimum": 0}
+          }
+        },
+        "regression_tests": {
+          "type": "object",
+          "required": ["passed", "failed"],
+          "properties": {
+            "passed": {"type": "integer", "minimum": 0},
+            "failed": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["regression_status", "impact_analysis", "risk_level"],
+      "properties": {
+        "regression_status": {"type": "string", "enum": ["passed", "failed"]},
+        "impact_analysis": {"type": "string"},
+        "risk_level": {"type": "string", "enum": ["low", "medium", "high"]}
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}

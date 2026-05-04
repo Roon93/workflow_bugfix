@@ -1,0 +1,13 @@
+{
+  "repos": [
+    {
+      "name": "main-repo",
+      "path": "./",
+      "role": "main",
+      "language": "c++",
+      "buildSystem": "cmake"
+    }
+  ],
+  "crossRepoIndex": true,
+  "indexStrategy": "incremental"
+}

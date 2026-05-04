@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["regressionStatus", "testResults", "impactAnalysis", "recommendations"],
+  "properties": {
+    "regressionStatus": {
+      "type": "string",
+      "enum": ["passed", "failed"]
+    },
+    "testResults": {
+      "type": "object",
+      "properties": {
+        "unitTests": {
+          "type": "object",
+          "properties": {
+            "passed": { "type": "integer" },
+            "failed": { "type": "integer" },
+            "total": { "type": "integer" }
+          }
+        },
+        "integrationTests": {
+          "type": "object",
+          "properties": {
+            "passed": { "type": "integer" },
+            "failed": { "type": "integer" },
+            "total": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "impactAnalysis": {
+      "type": "object",
+      "properties": {
+        "affectedFiles": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "affectedSymbols": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "riskLevel": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

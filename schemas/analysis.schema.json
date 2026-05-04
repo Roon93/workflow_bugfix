@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["classification", "keyClues", "rootCauseHypothesis", "reproduceStrategy", "confidence", "repos"],
+  "properties": {
+    "classification": {
+      "type": "string"
+    },
+    "keyClues": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rootCauseHypothesis": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reproduceStrategy": {
+      "type": "string",
+      "enum": ["code_level", "conditional", "speculative"]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "repos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

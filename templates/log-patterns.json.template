@@ -1,0 +1,16 @@
+{
+  "timestampPattern": "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}",
+  "levelPatterns": {
+    "error": ["ERROR", "ERR", "FATAL"],
+    "warn": ["WARN", "WARNING"],
+    "info": ["INFO"],
+    "debug": ["DEBUG", "DBG"]
+  },
+  "logFunctionPatterns": [
+    "LOG_.*\\(",
+    "log_.*\\(",
+    "printf\\(",
+    "fprintf\\("
+  ],
+  "errorCodePattern": "error[_\\s]code[:\\s]*(\\d+)"
+}
