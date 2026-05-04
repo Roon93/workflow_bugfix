@@ -1,228 +1,124 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
-import { StateManager } from '../lib/state-manager.js';
-import { IndexBuilder } from '../lib/index-builder.js';
-import { RepoManager } from '../lib/repo-manager.js';
-import { TestRunner } from '../lib/test-runner.js';
-import { GitOps } from '../lib/git-ops.js';
-import { LogParser } from '../lib/log-parser.js';
-import { ContextRetriever } from '../lib/context-retriever.js';
+const { StateManager } = require('../lib/state-manager.js');
+const IndexBuilder = require('../lib/index-builder.js');
+const { RepoManager } = require('../lib/repo-manager.js');
+const { TestRunner } = require('../lib/test-runner.js');
+const { GitOps } = require('../lib/git-ops.js');
+const { LogParser } = require('../lib/log-parser.js');
+const { ContextRetriever } = require('../lib/context-retriever.js');
 
-const program = new Command();
+const args = process.argv.slice(2);
+const command = args[0];
 
-program
-  .name('bugfix-cli')
-  .description('CLI tool for workflow_bugfix plugin')
-  .version('0.1.0');
+function output(result) {
+  console.log(JSON.stringify(result, null, 2));
+}
 
 // Workflow commands
-program
-  .command('workflow:init')
-  .argument('<workflow-id>', 'Workflow ID')
-  .argument('<type>', 'Workflow type (bugfix|feature)')
-  .option('-r, --repos <repos...>', 'Repository names')
-  .action((workflowId, type, options) => {
-    const sm = new StateManager();
-    const result = sm.init(workflowId, type, options.repos || []);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
-program
-  .command('workflow:load')
-  .action(() => {
-    const sm = new StateManager();
-    const workflow = sm.load();
-    console.log(JSON.stringify(workflow, null, 2));
-  });
-
-program
-  .command('workflow:advance')
-  .argument('<phase>', 'Target phase')
-  .option('--no-checkpoint', 'Skip checkpoint creation')
-  .action((phase, options) => {
-    const sm = new StateManager();
-    const result = sm.advance(phase, options.checkpoint !== false);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
-program
-  .command('workflow:rollback')
-  .argument('<phase>', 'Target phase')
-  .argument('<checkpoint-tag>', 'Checkpoint tag')
-  .action((phase, checkpointTag) => {
-    const sm = new StateManager();
-    const result = sm.rollback(phase, checkpointTag);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
+if (command === 'workflow:init') {
+  const [workflowId, type] = args.slice(1);
+  const sm = new StateManager();
+  output(sm.init(workflowId, type, []));
+}
+else if (command === 'workflow:load') {
+  const sm = new StateManager();
+  output(sm.load());
+}
+else if (command === 'workflow:advance') {
+  const phase = args[1];
+  const sm = new StateManager();
+  output(sm.advance(phase));
+}
+else if (command === 'workflow:rollback') {
+  const [phase, tag] = args.slice(1);
+  const sm = new StateManager();
+  output(sm.rollback(phase, tag));
+}
 // Index commands
-program
-  .command('index:build')
-  .option('-r, --repos <repos...>', 'Repository paths')
-  .option('-i, --incremental', 'Incremental build')
-  .action((options) => {
-    const builder = new IndexBuilder('.bugfix/index.db');
-    const repos = options.repos || ['./'];
-    for (const repo of repos) {
-      builder.indexFile(repo, repo);
-    }
-    builder.close();
-    console.log(JSON.stringify({ success: true }, null, 2));
-  });
-
-program
-  .command('index:search-files')
-  .argument('<keywords...>', 'Search keywords')
-  .option('-r, --repos <repos...>', 'Repository names')
-  .option('-l, --language <lang>', 'Language filter')
-  .option('-m, --max <n>', 'Max results', '50')
-  .action((keywords, options) => {
-    const retriever = new ContextRetriever();
-    const result = retriever.searchFiles(keywords, options.repos || [], options.language, parseInt(options.max));
-    console.log(JSON.stringify(result, null, 2));
-    retriever.close();
-  });
-
-program
-  .command('index:search-symbols')
-  .argument('<name>', 'Symbol name')
-  .option('-t, --type <type>', 'Symbol type')
-  .option('-r, --repos <repos...>', 'Repository names')
-  .action((name, options) => {
-    const retriever = new ContextRetriever();
-    const result = retriever.searchSymbols(name, options.type, options.repos || []);
-    console.log(JSON.stringify(result, null, 2));
-    retriever.close();
-  });
-
-program
-  .command('index:trace-calls')
-  .argument('<symbol>', 'Symbol name')
-  .option('-d, --direction <dir>', 'Direction (callers|callees|both)', 'both')
-  .option('-m, --max-depth <n>', 'Max depth', '3')
-  .action((symbol, options) => {
-    const retriever = new ContextRetriever();
-    const result = retriever.traceCalls(symbol, options.direction, parseInt(options.maxDepth));
-    console.log(JSON.stringify(result, null, 2));
-    retriever.close();
-  });
-
-program
-  .command('index:analyze-impact')
-  .argument('<files...>', 'File paths')
-  .option('-s, --symbols <symbols...>', 'Symbol names')
-  .action((files, options) => {
-    const retriever = new ContextRetriever();
-    const result = retriever.analyzeImpact(files, options.symbols || []);
-    console.log(JSON.stringify(result, null, 2));
-    retriever.close();
-  });
-
+else if (command === 'index:build') {
+  const builder = new IndexBuilder('.bugfix/index.db');
+  builder.indexFile('./');
+  builder.close();
+  output({ success: true });
+}
+else if (command === 'index:search-files') {
+  const keywords = args.slice(1);
+  const retriever = new ContextRetriever();
+  output(retriever.searchFiles(keywords));
+  retriever.close();
+}
+else if (command === 'index:search-symbols') {
+  const name = args[1];
+  const retriever = new ContextRetriever();
+  output(retriever.searchSymbols(name));
+  retriever.close();
+}
+else if (command === 'index:trace-calls') {
+  const symbol = args[1];
+  const retriever = new ContextRetriever();
+  output(retriever.traceCalls(symbol));
+  retriever.close();
+}
+else if (command === 'index:analyze-impact') {
+  const files = args.slice(1);
+  const retriever = new ContextRetriever();
+  output(retriever.analyzeImpact(files));
+  retriever.close();
+}
 // Log commands
-program
-  .command('log:parse')
-  .argument('<log-file>', 'Log file path')
-  .action((logFile) => {
-    const parser = new LogParser();
-    const result = parser.parse(logFile);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
-program
-  .command('log:extract-clues')
-  .argument('<log-file>', 'Log file path')
-  .option('-k, --keywords <keywords...>', 'Keywords to search')
-  .action((logFile, options) => {
-    const parser = new LogParser();
-    const result = parser.extractClues(logFile, options.keywords || []);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
+else if (command === 'log:parse') {
+  const logFile = args[1];
+  const parser = new LogParser();
+  output(parser.parse(logFile));
+}
+else if (command === 'log:extract-clues') {
+  const logFile = args[1];
+  const parser = new LogParser();
+  output(parser.extractClues(logFile, []));
+}
 // Test commands
-program
-  .command('test:discover')
-  .option('-r, --repos <repos...>', 'Repository paths')
-  .option('-l, --languages <langs...>', 'Languages')
-  .action((options) => {
-    const runner = new TestRunner();
-    const result = runner.discover(options.repos || ['./'], options.languages || ['c', 'cpp', 'typescript', 'python']);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
-program
-  .command('test:run')
-  .argument('<test-file>', 'Test file path')
-  .option('-n, --name <name>', 'Test name')
-  .option('-f, --framework <framework>', 'Test framework')
-  .option('-t, --timeout <ms>', 'Timeout in ms', '30000')
-  .action((testFile, options) => {
-    const runner = new TestRunner();
-    const result = runner.run(testFile, options.name, options.framework, parseInt(options.timeout));
-    console.log(JSON.stringify(result, null, 2));
-  });
-
+else if (command === 'test:discover') {
+  const runner = new TestRunner();
+  output(runner.discover(['./'], ['c', 'cpp', 'typescript', 'python']));
+}
+else if (command === 'test:run') {
+  const testFile = args[1];
+  const runner = new TestRunner();
+  output(runner.run(testFile, null, null));
+}
 // Git commands
-program
-  .command('git:create-branch')
-  .argument('<branch-name>', 'Branch name')
-  .option('-b, --base <branch>', 'Base branch', 'main')
-  .option('-r, --repos <repos...>', 'Repository paths')
-  .action(async (branchName, options) => {
-    const gitOps = new GitOps();
-    const result = await gitOps.createBranch(branchName, options.base, options.repos || ['./']);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
-program
-  .command('git:commit')
-  .argument('<message>', 'Commit message')
-  .option('-f, --files <files...>', 'Files to commit')
-  .option('-r, --repos <repos...>', 'Repository paths')
-  .action(async (message, options) => {
-    const gitOps = new GitOps();
-    const result = await gitOps.commit(message, options.files || [], options.repos || ['./']);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
-program
-  .command('git:tag-checkpoint')
-  .argument('<tag>', 'Tag name')
-  .argument('<message>', 'Tag message')
-  .option('-r, --repos <repos...>', 'Repository paths')
-  .action(async (tag, message, options) => {
-    const gitOps = new GitOps();
-    const result = await gitOps.tagCheckpoint(tag, message, options.repos || ['./']);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
-program
-  .command('git:rewind')
-  .argument('<checkpoint-tag>', 'Checkpoint tag')
-  .option('-r, --repos <repos...>', 'Repository paths')
-  .action(async (checkpointTag, options) => {
-    const gitOps = new GitOps();
-    const result = await gitOps.rewind(checkpointTag, options.repos || ['./']);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
+else if (command === 'git:create-branch') {
+  const branchName = args[1];
+  const gitOps = new GitOps();
+  gitOps.createBranch(branchName, 'main', ['./']).then(output);
+}
+else if (command === 'git:commit') {
+  const message = args[1];
+  const gitOps = new GitOps();
+  gitOps.commit(message, [], ['./']).then(output);
+}
+else if (command === 'git:tag-checkpoint') {
+  const [tag, message] = args.slice(1);
+  const gitOps = new GitOps();
+  gitOps.tagCheckpoint(tag, message, ['./']).then(output);
+}
+else if (command === 'git:rewind') {
+  const tag = args[1];
+  const gitOps = new GitOps();
+  gitOps.rewind(tag, ['./']).then(output);
+}
 // Repo commands
-program
-  .command('repo:list')
-  .action(() => {
-    const repoManager = new RepoManager();
-    const result = repoManager.list();
-    console.log(JSON.stringify(result, null, 2));
-  });
-
-program
-  .command('repo:sync-branches')
-  .argument('<branch-name>', 'Branch name')
-  .option('-r, --repos <repos...>', 'Repository names')
-  .action(async (branchName, options) => {
-    const repoManager = new RepoManager();
-    const repos = options.repos || repoManager.list().repos.map(r => r.path);
-    const result = await repoManager.syncBranches(branchName, repos);
-    console.log(JSON.stringify(result, null, 2));
-  });
-
-program.parse();
+else if (command === 'repo:list') {
+  const rm = new RepoManager();
+  output(rm.list());
+}
+else if (command === 'repo:validate') {
+  const rm = new RepoManager();
+  const repos = rm.list();
+  output(rm.validateRepos(repos));
+}
+else {
+  console.error('Unknown command:', command);
+  console.error('Usage: bugfix-cli <command> [args...]');
+  process.exit(1);
+}

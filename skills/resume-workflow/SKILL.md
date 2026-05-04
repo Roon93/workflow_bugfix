@@ -1,6 +1,7 @@
-# resume
-
-从中断点恢复 workflow
+---
+name: resume
+description: 从中断点恢复工作流
+---
 
 ## 输入
 

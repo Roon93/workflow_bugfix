@@ -1,6 +1,7 @@
-# status
-
-查询当前 workflow 状态
+---
+name: status
+description: 查询当前工作流状态
+---
 
 ## 输入
 

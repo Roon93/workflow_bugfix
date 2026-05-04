@@ -1,6 +1,7 @@
-# feature
-
-初始化 feature workflow
+---
+name: feature
+description: 初始化功能开发工作流
+---
 
 ## 输入
 

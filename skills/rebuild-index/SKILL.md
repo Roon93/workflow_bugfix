@@ -1,6 +1,7 @@
-# rebuild-index
-
-重建代码索引
+---
+name: rebuild-index
+description: 重建代码索引
+---
 
 ## 输入
 

@@ -1,6 +1,7 @@
-# bugfix
-
-初始化 Bug 修复工作流
+---
+name: bugfix
+description: 初始化 Bug 修复工作流
+---
 
 ## 输入
 

@@ -12,20 +12,8 @@
   "keywords": ["claude-code", "plugin", "bugfix", "tdd", "multi-repo"],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "commander": "^12.0.0",
-    "tree-sitter": "^0.21.0",
-    "tree-sitter-c": "^0.21.0",
-    "tree-sitter-cpp": "^0.22.0",
-    "tree-sitter-typescript": "^0.21.0",
-    "tree-sitter-python": "^0.21.0",
-    "better-sqlite3": "^11.0.0",
-    "simple-git": "^3.25.0"
-  },
-  "devDependencies": {
-    "node:test": "*",
-    "node:assert": "*"
-  },
+  "dependencies": {},
+  "devDependencies": {},
   "engines": {
     "node": ">=20.0.0"
   }

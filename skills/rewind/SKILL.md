@@ -1,6 +1,7 @@
-# rewind
-
-回退到指定 checkpoint
+---
+name: rewind
+description: 回退到指定检查点
+---
 
 ## 输入
 
