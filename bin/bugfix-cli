@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const { StateManager } = require('../lib/state-manager.js');
-const IndexBuilder = require('../lib/index-builder.js');
+const { IndexBuilder } = require('../lib/index-builder.js');
 const { RepoManager } = require('../lib/repo-manager.js');
 const { TestRunner } = require('../lib/test-runner.js');
 const { GitOps } = require('../lib/git-ops.js');
