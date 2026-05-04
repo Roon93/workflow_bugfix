@@ -14,51 +14,130 @@ Automated bug fixing and feature development workflow plugin for Claude Code.
 
 ## Installation
 
+### 1. Install Dependencies
+
 ```bash
+cd /path/to/workflow_bug
 npm install
+```
+
+**Required dependencies:**
+- `tree-sitter` - Code parsing
+- `tree-sitter-c`, `tree-sitter-cpp`, `tree-sitter-typescript`, `tree-sitter-python` - Language parsers
+- `better-sqlite3` - Code index database
+
+**System requirements:**
+- Node.js >= 20.0.0
+- Python 3 (for building native modules)
+- C++ compiler (for better-sqlite3)
+
+### 2. Use as Claude Code Plugin
+
+```bash
+claude --plugin-dir /path/to/workflow_bug chat
+```
+
+### 3. Use as Standalone CLI (Optional)
+
+```bash
+# Make CLI executable
 chmod +x bin/bugfix-cli
+
+# Add to PATH or use directly
+./bin/bugfix-cli workflow:init my-bugfix bugfix
 ```
 
 ## Quick Start
 
-### Bug Fixing
+### As Claude Code Plugin
 
 ```bash
-# Start a bug fix workflow
-/bugfix "Memory leak in data_processor.c"
+# Start bug fix workflow
+/workflow_bug:bugfix
 
-# With log file
-/bugfix "Crash on startup" --log crash.log
+# Start feature workflow
+/workflow_bug:feature
 
 # Check status
-/status
+/workflow_bug:status
 
-# Resume after interruption
-/resume
+# Resume workflow
+/workflow_bug:resume
 
 # Rewind to checkpoint
-/rewind checkpoint-context
+/workflow_bug:rewind
+
+# Rebuild index
+/workflow_bug:rebuild-index
 ```
 
-### Feature Development
+### As Standalone CLI
 
 ```bash
-# Start a feature workflow
-/feature "Add user authentication"
+# Initialize workflow
+./bin/bugfix-cli workflow:init my-bugfix bugfix
 
-# Check status
-/status
+# Build code index
+./bin/bugfix-cli index:build
+
+# Search files
+./bin/bugfix-cli index:search-files memory leak
+
+# Search symbols
+./bin/bugfix-cli index:search-symbols process_data
+
+# Parse log file
+./bin/bugfix-cli log:parse crash.log
+
+# Discover tests
+./bin/bugfix-cli test:discover
+
+# Create git branch
+./bin/bugfix-cli git:create-branch bugfix/memory-leak
+
+# Tag checkpoint
+./bin/bugfix-cli git:tag-checkpoint checkpoint-analysis "Analysis complete"
 ```
 
-### Index Management
+## Available Skills
 
-```bash
-# Rebuild code index
-/rebuild-index
+When used as Claude Code plugin, the following skills are available:
 
-# Full rebuild
-/rebuild-index --full
-```
+- **bugfix** - Start bug fixing workflow
+- **feature** - Start feature development workflow
+- **status** - Check workflow status
+- **resume** - Resume interrupted workflow
+- **rewind** - Rewind to previous checkpoint
+- **rebuild-index** - Rebuild code index
+
+## CLI Commands
+
+### Workflow Management
+- `workflow:init <id> <type>` - Initialize workflow
+- `workflow:load` - Load current state
+- `workflow:advance <phase>` - Advance to next phase
+- `workflow:rollback <phase> <tag>` - Rollback to checkpoint
+
+### Code Indexing
+- `index:build` - Build code index
+- `index:search-files <keywords...>` - Search files by keywords
+- `index:search-symbols <name>` - Search symbols by name
+- `index:trace-calls <symbol>` - Trace call chains
+- `index:analyze-impact <files...>` - Analyze change impact
+
+### Testing
+- `test:discover` - Discover test frameworks
+- `test:run <testFile>` - Run tests
+
+### Git Operations
+- `git:create-branch <name>` - Create branch
+- `git:commit <message>` - Commit changes
+- `git:tag-checkpoint <tag> <message>` - Create checkpoint
+- `git:rewind <tag>` - Rewind to checkpoint
+
+### Log Analysis
+- `log:parse <logFile>` - Parse log file
+- `log:extract-clues <logFile>` - Extract clues from log
 
 ## Configuration
 
@@ -116,39 +195,9 @@ Create `.bugfix/log-patterns.json`:
 
 - **Skills**: User-facing commands (`/bugfix`, `/feature`, etc.)
 - **Agents**: Specialized agents (analyzer, locator, tester, fixer, verifier)
-- **Tools**: MCP tools (workflow, index, test, git, log)
+- **CLI Tools**: Standalone command-line interface
 - **State**: JSON files in `state/` directory
 - **Index**: SQLite database in `.bugfix/index.db`
-
-## MCP Tools
-
-### Workflow Management
-- `workflow.init` - Initialize workflow
-- `workflow.load` - Load current state
-- `workflow.advance` - Advance to next phase
-- `workflow.rollback` - Rollback to checkpoint
-
-### Code Indexing
-- `index.build` - Build code index
-- `index.search-files` - Search files by keywords
-- `index.search-symbols` - Search symbols by name
-- `index.trace-calls` - Trace call chains
-- `index.analyze-impact` - Analyze change impact
-
-### Testing
-- `test.discover` - Discover test frameworks
-- `test.run` - Run tests
-- `test.parse-result` - Parse test results
-
-### Git Operations
-- `git.create-branch` - Create branch in repos
-- `git.commit` - Commit changes
-- `git.tag-checkpoint` - Create checkpoint
-- `git.rewind` - Rewind to checkpoint
-
-### Log Analysis
-- `log.parse` - Parse log file
-- `log.extract-clues` - Extract clues from log
 
 ## Supported Languages
 
@@ -177,10 +226,41 @@ npm test
 npm test -- test/state-manager.test.js
 
 # Build index
-node bin/bugfix-cli index:build
+./bin/bugfix-cli index:build
 
 # Check workflow
-node bin/bugfix-cli workflow:load
+./bin/bugfix-cli workflow:load
+```
+
+## Troubleshooting
+
+### Installation fails
+
+If `npm install` fails with native module errors:
+
+```bash
+# Install build tools (Ubuntu/Debian)
+sudo apt-get install build-essential python3
+
+# Install build tools (macOS)
+xcode-select --install
+
+# Install build tools (Windows)
+npm install --global windows-build-tools
+```
+
+### Skills not showing up
+
+Verify plugin structure:
+
+```bash
+./verify-plugin.sh
+```
+
+Test plugin loading:
+
+```bash
+claude --plugin-dir /path/to/workflow_bug -p "list available skills"
 ```
 
 ## License
