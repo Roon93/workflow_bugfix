@@ -14,12 +14,22 @@ Claude Code 自动化 Bug 修复和功能开发工作流插件。
 
 ## 快速开始
 
-### 安装
+### 联网环境安装
 
 ```bash
 git clone https://github.com/Roon93/workflow_bugfix.git
 cd workflow_bugfix
 npm install
+```
+
+### 离线/内网环境安装
+
+依赖已打包在仓库中，无需联网安装：
+
+```bash
+git clone <仓库地址>
+cd workflow_bugfix
+npm rebuild    # 重新编译 better-sqlite3 匹配目标 Node ABI
 ```
 
 详细安装说明见 [docs/INSTALL.md](docs/INSTALL.md)

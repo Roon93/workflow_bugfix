@@ -3,33 +3,63 @@
 ## 前置要求
 
 - **Node.js** >= 20.0.0
-- **Python 3** (用于编译原生模块)
+- **Python 3.6+** (node-gyp 编译脚本依赖)
 - **C++ 编译器** (用于编译 better-sqlite3)
-  - Ubuntu/Debian: `sudo apt-get install build-essential`
+  - Linux: `gcc/g++ >= 9` + `make`（`sudo apt-get install build-essential`）
   - macOS: `xcode-select --install`
   - Windows: `npm install --global windows-build-tools`
 
 ## 安装步骤
 
-### 1. 克隆仓库
+### 联网环境
+
+#### 1. 克隆仓库
 
 ```bash
 git clone https://github.com/Roon93/workflow_bugfix.git
 cd workflow_bugfix
 ```
 
-### 2. 安装依赖
+#### 2. 安装依赖
 
 ```bash
 npm install
 ```
 
 这将安装以下依赖：
-- `tree-sitter` - 代码解析引擎
+- `tree-sitter` - 代码解析引擎（N-API 构建，跨 Node 版本兼容）
 - `tree-sitter-c`, `tree-sitter-cpp`, `tree-sitter-typescript`, `tree-sitter-python` - 语言解析器
-- `better-sqlite3` - SQLite 数据库（用于代码索引）
+- `better-sqlite3` - SQLite 数据库（用于代码索引，需本地编译）
 
-### 3. 验证安装
+### 离线/内网环境
+
+依赖已打包在仓库中，无需联网安装。
+
+#### 1. 克隆仓库
+
+```bash
+git clone <仓库地址>
+cd workflow_bugfix
+```
+
+#### 2. 重新编译原生模块
+
+```bash
+npm rebuild
+```
+
+此命令仅重新编译 `better-sqlite3` 以匹配当前 Node.js 版本的 ABI。`tree-sitter` 系列使用 N-API 预构建，无需重新编译。
+
+> **内网环境要求**：`gcc/g++ >= 9`、`make`、`python3 >= 3.6`
+> 
+> 验证命令：
+> ```bash
+> gcc --version    # 确认 >= 9
+> make --version
+> python3 --version
+> ```
+
+#### 3. 验证安装
 
 ```bash
 ./verify-plugin.sh
@@ -108,13 +138,18 @@ workflow_bugfix/
 
 ## 故障排除
 
-### npm install 失败
+### npm install / npm rebuild 失败
 
 **错误**: `gyp ERR! build error` 或 `node-gyp` 相关错误
 
 **解决**:
 ```bash
-# Ubuntu/Debian
+# 确认编译工具链完整
+gcc --version    # >= 9
+make --version
+python3 --version
+
+# Linux (Ubuntu/Debian)
 sudo apt-get install build-essential python3
 
 # macOS
@@ -123,6 +158,19 @@ xcode-select --install
 # Windows
 npm install --global windows-build-tools
 ```
+
+**错误**: `The module was compiled against a different Node.js version`
+
+**原因**: better-sqlite3 的预编译二进制与当前 Node.js ABI 不匹配。
+
+**解决**:
+```bash
+npm rebuild better-sqlite3
+```
+
+**错误**: gcc 9.x 编译报错 `unrecognized command line option '-std=c++20'`
+
+**说明**: binding.gyp 已降级为 C++17，gcc 9 完整支持。如仍报此错误，确认你拉取的是最新代码。
 
 ### Skills 未显示
 
