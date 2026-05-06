@@ -1,4 +1,6 @@
-node_modules/
+# 依赖已打包到仓库，离线使用需执行 npm rebuild
+# node_modules/  ← 已取消忽略，用于离线部署
+
 .bugfix/
 state/
 *.log
