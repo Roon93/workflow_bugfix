@@ -3,8 +3,10 @@
 
 .bugfix/
 state/
+dist/
 *.log
 .DS_Store
+.claude/settings.local.json
 
 # 开发过程文件
 prd.md
