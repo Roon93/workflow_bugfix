@@ -105,7 +105,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
    - Feature：功能测试通过 + 集成测试通过 + 文档更新
 3. 展示验收标准，请求用户确认
 4. 用户确认后，写入 `state/acceptance/confirmed.json`
-5. 调用 `checkpoint.create("before-fix")`
+5. 调用 `git:tag-checkpoint("before-fix")`
 6. 调用 `workflow:advance("FIX")`
 
 ### 5. 修复实现（Phase 5: FIX）
@@ -133,7 +133,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
    - 询问用户：重试 / 调整策略 / 回退
 6. 测试通过后：
    - 写入 `state/fix/success.json`
-   - 调用 `checkpoint.create("after-fix")`
+   - 调用 `git:tag-checkpoint("after-fix")`
    - 调用 `workflow:advance("VERIFY")`
 
 ### 6. 回归验证（Phase 6: VERIFY）
@@ -203,7 +203,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 }
 ```
 
-**工具**：使用 `log-pattern.match` 分析日志模式
+**工具**：使用 `log:extract-clues` 分析日志模式
 ```
 
 ### 派发给 fixer
