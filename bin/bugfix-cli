@@ -73,7 +73,7 @@ async function dispatchTool(name, a) {
     case 'log:extract-clues': { const lp = new LogParser(); return lp.extractClues(a.logFile, a.keywords || []); }
     case 'index:build': {
       const db = new IndexBuilder('.bugfix/index.db');
-      for (const repo of (a.repos || ['./'])) db.indexDirectory(repo, repo);
+      for (const repo of (a.repos || ['./'])) await db.indexDirectory(repo, repo);
       const stats = db.db.prepare('SELECT COUNT(*) as n FROM files').get();
       const syms = db.db.prepare('SELECT COUNT(*) as n FROM symbols').get();
       const calls = db.db.prepare('SELECT COUNT(*) as n FROM calls').get();
