@@ -96,11 +96,11 @@ const { IndexBuilder } = require(projectDir + '/lib/index-builder.js');
 const Database = require(projectDir + '/node_modules/better-sqlite3');
 
 async function main() {
-  // cfgOverride.compileCommandsPaths 传绝对路径，绕过只读 repoDir 限制
-  const builder = new IndexBuilder(dbPath, { compileCommandsPaths: [ccdbPath] });
+  // 测试 tree-sitter 模式（默认）
+  const builder1 = new IndexBuilder(dbPath, { compileCommandsPaths: [ccdbPath] });
   let stats;
-  try { stats = await builder.indexDirectory(repoDir + '/src', repoDir); }
-  finally { builder.close(); }
+  try { stats = await builder1.indexDirectory(repoDir + '/src', repoDir); }
+  finally { builder1.close(); }
 
   const db = new Database(dbPath, { readonly: true });
   const symCount  = db.prepare('SELECT COUNT(*) as n FROM symbols').get().n;
@@ -120,7 +120,65 @@ async function main() {
     errors.forEach(e => console.error('[FAIL] ' + e));
     process.exit(1);
   }
-  console.log('[PASS] 所有验收条件通过');
+  console.log('[PASS] tree-sitter 模式通过');
+}
+main().catch(err => {
+  console.error('[FAIL] exception: ' + err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+NODE_EOF
+}
+
+# ── ctags+cscope 测试（在目标环境执行）────────────────────────────────────────
+run_ctags_test() {
+  local project_dir="$1"
+  local redis_dir="$2"
+
+  info "Node.js: $(node --version), CPUs: $(nproc)"
+
+  local work_dir
+  work_dir=$(mktemp -d)
+  trap 'rm -rf "$work_dir"' RETURN
+
+  local db_path="$work_dir/test-ctags.db"
+  info "开始 ctags+cscope 索引（db: $db_path）..."
+
+  node - "$project_dir" "$redis_dir" "$db_path" <<'NODE_EOF'
+const projectDir = process.argv[2], repoDir = process.argv[3];
+const dbPath = process.argv[4];
+process.chdir(projectDir);
+const { IndexBuilder } = require(projectDir + '/lib/index-builder.js');
+const Database = require(projectDir + '/node_modules/better-sqlite3');
+
+async function main() {
+  // ctags+cscope 轻量索引模式
+  const builder = new IndexBuilder(dbPath, {
+    indexer: 'ctags+cscope',
+    skipDirs: ['.git', 'deps', 'tests', 'examples', 'utils', 'adlist'],
+  });
+  let stats;
+  try { stats = await builder.indexDirectory(repoDir + '/src', repoDir); }
+  finally { builder.close(); }
+
+  const db = new Database(dbPath, { readonly: true });
+  const symCount  = db.prepare('SELECT COUNT(*) as n FROM symbols').get().n;
+  const callCount = db.prepare('SELECT COUNT(*) as n FROM calls').get().n;
+  db.close();
+
+  console.log('stats:   ' + JSON.stringify(stats));
+  console.log('symbols: ' + symCount + '  calls: ' + callCount);
+
+  const errors = [];
+  if (stats.indexed < 50) errors.push('indexed too low: ' + stats.indexed + ' (expected >= 50)');
+  if (symCount      < 500) errors.push('symbols too low: ' + symCount + ' (expected >= 500)');
+  if (callCount     < 200) errors.push('calls too low: '   + callCount + ' (expected >= 200)');
+
+  if (errors.length > 0) {
+    errors.forEach(e => console.error('[FAIL] ' + e));
+    process.exit(1);
+  }
+  console.log('[PASS] ctags+cscope 模式通过');
 }
 main().catch(err => {
   console.error('[FAIL] exception: ' + err.message);
@@ -136,6 +194,8 @@ prepare_redis
 if [ "$SKIP_DOCKER" = "1" ]; then
   info "跳过 docker，直接在当前环境运行"
   run_index_test "$PROJECT_DIR" "$REDIS_CACHE"
+  info "测试 ctags+cscope 轻量索引模式..."
+  run_ctags_test "$PROJECT_DIR" "$REDIS_CACHE"
   pass "集成测试通过（当前环境）"
   exit 0
 fi
@@ -172,8 +232,11 @@ cp /plugin/lib/*.js "\$PLUGIN_DIR/lib/"
 info "插件目录: \$PLUGIN_DIR"
 
 $(declare -f run_index_test)
+$(declare -f run_ctags_test)
 
 run_index_test "\$PLUGIN_DIR" /redis
+info "测试 ctags+cscope 轻量索引模式..."
+run_ctags_test "\$PLUGIN_DIR" /redis
 pass "Ubuntu 20.04 索引测试通过"
 CONTAINER_EOF
 
