@@ -22,7 +22,7 @@
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                    执行层 (Specialist Agents)                 │
-│  analyzer | locator | tester | fixer | verifier             │
+│  analyzer | locator | tester | fixer | verifier | log-analyzer             │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -45,6 +45,9 @@
 5. **最小权限**：每个 agent 只访问必要的上下文
 6. **并发优先**：无依赖任务并行执行，减少总耗时
 7. **上下文精简**：agent 间传递结构化 Handoff，避免信息失真
+8. **大数据隔离**：日志 > 1MB 时由 `log-analyzer` sub-agent 处理，
+   主 agent 只接收线索摘要；`log:parse` 工具只返回摘要和错误样本，
+   不返回全量条目
 
 ## 2. 目录结构
 
@@ -58,7 +61,8 @@ workflow_bugfix/
 │   ├── locator.md                     # 上下文检索 agent
 │   ├── tester.md                      # 测试编写 agent
 │   ├── fixer.md                       # 修复实现 agent
-│   └── verifier.md                    # 回归验证 agent
+│   ├── verifier.md                    # 回归验证 agent
+│   ├── log-analyzer.md                # 日志分析 sub-agent（大日志隔离）
 ├── skills/
 │   ├── bugfix-start/
 │   │   └── SKILL.md                   # /bugfix 入口
@@ -127,9 +131,9 @@ workflow_bugfix/
 - 用户提示信息
 
 **工具依赖**：
-- `bugfix-cli workflow.load`
-- `bugfix-cli workflow.advance`
-- `bugfix-cli workflow.rollback`
+- `bugfix-cli workflow:load`
+- `bugfix-cli workflow:advance`
+- `bugfix-cli workflow:rollback`
 
 ### 3.2 analyzer（输入分析 Agent）
 
@@ -147,8 +151,9 @@ workflow_bugfix/
 - `state/analysis/qa-history.json`（交互历史）
 
 **工具依赖**：
-- `bugfix-cli log.parse`（解析日志）
-- `bugfix-cli log.extract-clues`（提取线索）
+- `log:extract-clues`（提取线索，日志 < 1MB 时直接调用）
+- `log:parse`（获取摘要和错误样本，最多 20 条）
+- 日志 > 1MB 时启动 `log-analyzer` sub-agent，主 agent 只接收摘要
 
 ### 3.3 locator（上下文检索 Agent）
 
@@ -166,10 +171,10 @@ workflow_bugfix/
 - `state/context/files/`（相关文件快照）
 
 **工具依赖**：
-- `bugfix-cli index.search-files`
-- `bugfix-cli index.search-symbols`
-- `bugfix-cli index.trace-calls`
-- `bugfix-cli index.analyze-impact`
+- `bugfix-cli index:search-files`
+- `bugfix-cli index:search-symbols`
+- `bugfix-cli index:trace-calls`
+- `bugfix-cli index:analyze-impact`
 
 ### 3.4 tester（测试编写 Agent）
 
@@ -187,9 +192,9 @@ workflow_bugfix/
 - `state/reproduce/test-code/` 或 `state/test/test-code/`
 
 **工具依赖**：
-- `bugfix-cli test.discover`（发现测试框架）
-- `bugfix-cli test.run`（运行测试）
-- `bugfix-cli test.parse-result`（解析结果）
+- `bugfix-cli test:discover`（发现测试框架）
+- `bugfix-cli test:run`（运行测试）
+- `bugfix-cli test:parse-result`（解析结果）
 
 ### 3.5 fixer（修复实现 Agent）
 
@@ -209,8 +214,8 @@ workflow_bugfix/
 - 修改后的代码文件
 
 **工具依赖**：
-- `bugfix-cli test.run`
-- `bugfix-cli git.commit`
+- `bugfix-cli test:run`
+- `bugfix-cli git:commit`
 
 ### 3.6 verifier（回归验证 Agent）
 
@@ -227,8 +232,8 @@ workflow_bugfix/
 - `state/verify/report.json`
 
 **工具依赖**：
-- `bugfix-cli test.run`
-- `bugfix-cli index.analyze-impact`
+- `bugfix-cli test:run`
+- `bugfix-cli index:analyze-impact`
 
 ## 4. 工具层设计（MCP/CLI）
 
@@ -240,26 +245,26 @@ workflow_bugfix/
 ```json
 {
   "tools": [
-    "workflow.init",
-    "workflow.load",
-    "workflow.advance",
-    "workflow.rollback",
-    "log.parse",
-    "log.extract-clues",
-    "index.build",
-    "index.search-files",
-    "index.search-symbols",
-    "index.trace-calls",
-    "index.analyze-impact",
-    "test.discover",
-    "test.run",
-    "test.parse-result",
-    "git.create-branch",
-    "git.commit",
-    "git.tag-checkpoint",
-    "git.rewind",
-    "repo.list",
-    "repo.sync-branches"
+    "workflow:init",
+    "workflow:load",
+    "workflow:advance",
+    "workflow:rollback",
+    "log:parse",
+    "log:extract-clues",
+    "index:build",
+    "index:search-files",
+    "index:search-symbols",
+    "index:trace-calls",
+    "index:analyze-impact",
+    "test:discover",
+    "test:run",
+    "test:parse-result",
+    "git:create-branch",
+    "git:commit",
+    "git:tag-checkpoint",
+    "git:rewind",
+    "repo:list",
+    "repo:sync-branches"
   ]
 }
 ```

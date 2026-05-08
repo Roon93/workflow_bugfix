@@ -91,34 +91,35 @@
 ### 1.2 日志解析接口
 
 #### log.parse
-解析日志文件，提取结构化信息。
+解析日志文件，返回摘要和错误样本。不返回全量条目，避免大日志撑爆 agent 上下文。
 
 **输入**：
 ```json
 {
   "logFile": "path/to/log.txt",
-  "patterns": ".bugfix/log-patterns.json"
+  "patterns": ".bugfix/log-patterns.json",
+  "maxErrorSamples": 20
 }
 ```
 
 **输出**：
 ```json
 {
-  "entries": [
+  "summary": {
+    "totalLines": 85000,
+    "errorCount": 312,
+    "warnCount": 1024
+  },
+  "errorSamples": [
     {
       "timestamp": "2026-05-03 10:15:23",
-      "level": "ERROR",
-      "message": "Memory allocation failed",
+      "errorCode": "12",
       "file": "data_processor.c",
-      "line": 125,
-      "function": "process_data"
+      "lineNo": 125,
+      "function": "process_data",
+      "message": "Memory allocation failed"
     }
-  ],
-  "summary": {
-    "totalLines": 1000,
-    "errorCount": 5,
-    "warnCount": 12
-  }
+  ]
 }
 ```
 
