@@ -15,16 +15,20 @@ Rebuild the SQLite code index for symbol search, call tracing, and impact analys
    index:build({ repos: [<current repo path>], incremental: false })
    ```
    This tool runs via Node.js (`bin/bugfix-cli`) and uses the bundled
-   tree-sitter Node bindings. Do NOT use Bash, Python, or any other
-   method to parse source files — only call the MCP tool.
+   tree-sitter Node bindings. Do NOT use Python or pip to parse source files.
 
-2. **Report results** from the tool response:
+2. **If the MCP tool is unavailable**, fall back to running the CLI directly:
+   ```bash
+   node bin/bugfix-cli index:build
+   ```
+
+3. **Report results** from the tool response:
    - File count indexed
    - Symbol count
    - Call relationship count
 
 ## Important
 
-Always use the `index:build` MCP tool. Never run `python`, `pip install tree-sitter`,
-or any shell command to parse code. The tree-sitter parsing is handled entirely
-by the Node.js MCP server.
+Always prefer the `index:build` MCP tool. The CLI fallback is only for environments
+where the MCP server is not configured. Never run `python`, `pip install tree-sitter`,
+or any shell command to parse code — tree-sitter parsing is handled entirely by Node.js.

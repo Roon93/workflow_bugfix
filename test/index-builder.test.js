@@ -318,6 +318,47 @@ test('analyzeImpact: 返回受影响文件和符号', async () => {
   cleanup(db, dir);
 });
 
+// ── worker 线程安全 ───────────────────────────────────────────────────────────
+
+test('indexDirectory: worker 线程不加载 better-sqlite3（线程安全）', async () => {
+  // 验证 worker 线程中不会因加载 better-sqlite3 而崩溃
+  // 通过并发索引多个目录来触发多 worker 场景
+  const dir = tmpDir();
+  const db = tmpDb();
+  // 写入足够多的文件，确保多个 worker 都被使用
+  for (let i = 0; i < 10; i++) {
+    fs.writeFileSync(path.join(dir, `f${i}.c`), `void func${i}() {}\n`);
+  }
+
+  const builder = new IndexBuilder(db);
+  // 如果 better-sqlite3 在 worker 线程中被加载，这里会崩溃
+  const stats = await builder.indexDirectory(dir, dir);
+
+  assert.equal(stats.total, 10);
+  assert.equal(stats.indexed, 10);
+
+  builder.close();
+  cleanup(db, dir);
+});
+
+test('indexDirectory: writeBatch 异常不崩溃进程', async () => {
+  // 验证 writeBatch 抛出时 Promise 被 reject 而不是进程崩溃
+  const dir = tmpDir();
+  const db = tmpDb();
+  fs.writeFileSync(path.join(dir, 'a.c'), 'void fa() {}\n');
+
+  const builder = new IndexBuilder(db);
+  // 关闭数据库后再调用 indexDirectory，应该 reject 而不是崩溃
+  builder.close();
+
+  await assert.rejects(
+    () => builder.indexDirectory(dir, dir),
+    (err) => err instanceof Error
+  );
+
+  cleanup(db, dir);
+});
+
 // ── findHubNodes / findBridgeNodes ────────────────────────────────────────────
 
 test('findHubNodes: 返回被调用最多的函数', async () => {

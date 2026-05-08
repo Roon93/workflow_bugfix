@@ -2,8 +2,7 @@
   "mcpServers": {
     "bugfix": {
       "command": "node",
-      "args": ["bin/bugfix-cli", "--mcp"],
-      "cwd": "${workspaceFolder}"
+      "args": ["bin/bugfix-cli", "--mcp"]
     }
   }
 }
