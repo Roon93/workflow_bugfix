@@ -359,6 +359,121 @@ test('indexDirectory: writeBatch 异常不崩溃进程', async () => {
   cleanup(db, dir);
 });
 
+// ── 线程数配置 ────────────────────────────────────────────────────────────────
+
+test('indexDirectory: maxWorkers=0 时使用 75% CPU 核数', async () => {
+  const dir = tmpDir();
+  const db = tmpDb();
+  for (let i = 0; i < 4; i++) fs.writeFileSync(path.join(dir, `w${i}.c`), `void wf${i}() {}\n`);
+
+  const builder = new IndexBuilder(db, { maxWorkers: 0 });
+  const stats = await builder.indexDirectory(dir, dir);
+  assert.equal(stats.total, 4);
+  assert.equal(stats.indexed, 4);
+
+  builder.close();
+  cleanup(db, dir);
+});
+
+test('indexDirectory: maxWorkers=1 时强制单 worker', async () => {
+  const dir = tmpDir();
+  const db = tmpDb();
+  for (let i = 0; i < 4; i++) fs.writeFileSync(path.join(dir, `s${i}.c`), `void sf${i}() {}\n`);
+
+  const builder = new IndexBuilder(db, { maxWorkers: 1 });
+  const stats = await builder.indexDirectory(dir, dir);
+  assert.equal(stats.total, 4);
+  assert.equal(stats.indexed, 4);
+
+  builder.close();
+  cleanup(db, dir);
+});
+
+test('loadConfig: maxWorkers 和 indexer 字段可配置', () => {
+  const { loadConfig } = require('../lib/index-config');
+  const dir = tmpDir();
+  const bugfixDir = path.join(dir, '.bugfix');
+  fs.mkdirSync(bugfixDir);
+  fs.writeFileSync(path.join(bugfixDir, 'index-config.json'), JSON.stringify({
+    maxWorkers: 4,
+    indexer: 'ctags',
+  }));
+  const cfg = loadConfig(dir);
+  assert.equal(cfg.maxWorkers, 4);
+  assert.equal(cfg.indexer, 'ctags');
+  cleanup(dir);
+});
+
+// ── ctags/cscope 轻量索引 ─────────────────────────────────────────────────────
+
+const { execSync } = require('child_process');
+
+function hasBin(name) {
+  try { execSync(`which ${name}`, { stdio: 'ignore' }); return true; }
+  catch { return false; }
+}
+
+test('indexDirectory: indexer=ctags 写入 symbols，calls 为空', { skip: !hasBin('ctags') }, async () => {
+  const dir = tmpDir();
+  const db = tmpDb();
+  fs.writeFileSync(path.join(dir, 'a.c'), 'void fa() {}\nvoid fb() { fa(); }\n');
+  fs.writeFileSync(path.join(dir, 'b.c'), 'void fc() {}\n');
+
+  const builder = new IndexBuilder(db, { indexer: 'ctags' });
+  const stats = await builder.indexDirectory(dir, dir);
+
+  assert.ok(stats.total >= 2);
+  assert.ok(stats.indexed >= 2);
+
+  const symCount = builder.db.prepare('SELECT COUNT(*) as n FROM symbols').get().n;
+  assert.ok(symCount >= 3, `expected >= 3 symbols, got ${symCount}`);
+
+  const callCount = builder.db.prepare('SELECT COUNT(*) as n FROM calls').get().n;
+  assert.equal(callCount, 0, 'ctags-only mode should have no calls');
+
+  builder.close();
+  cleanup(db, dir);
+});
+
+test('indexDirectory: indexer=ctags+cscope 写入 symbols 和 calls', { skip: !hasBin('ctags') || !hasBin('cscope') }, async () => {
+  const dir = tmpDir();
+  const db = tmpDb();
+  fs.writeFileSync(path.join(dir, 'a.c'), 'void fa() {}\nvoid fb() { fa(); }\n');
+  fs.writeFileSync(path.join(dir, 'b.c'), 'void fc() { fb(); }\n');
+
+  const builder = new IndexBuilder(db, { indexer: 'ctags+cscope' });
+  const stats = await builder.indexDirectory(dir, dir);
+
+  assert.ok(stats.indexed >= 2);
+
+  const symCount = builder.db.prepare('SELECT COUNT(*) as n FROM symbols').get().n;
+  assert.ok(symCount >= 3, `expected >= 3 symbols, got ${symCount}`);
+
+  const callCount = builder.db.prepare('SELECT COUNT(*) as n FROM calls').get().n;
+  assert.ok(callCount >= 1, `expected >= 1 call, got ${callCount}`);
+
+  builder.close();
+  cleanup(db, dir);
+});
+
+test('indexDirectory: ctags 不存在时抛出有意义的错误', async () => {
+  const dir = tmpDir();
+  const db = tmpDb();
+  fs.writeFileSync(path.join(dir, 'a.c'), 'void fa() {}\n');
+
+  const builder = new IndexBuilder(db, { indexer: 'ctags', ctagsBin: '/nonexistent/ctags' });
+  await assert.rejects(
+    () => builder.indexDirectory(dir, dir),
+    (err) => {
+      assert.ok(err.message.includes('ctags'), `error should mention ctags: ${err.message}`);
+      return true;
+    }
+  );
+
+  builder.close();
+  cleanup(db, dir);
+});
+
 // ── findHubNodes / findBridgeNodes ────────────────────────────────────────────
 
 test('findHubNodes: 返回被调用最多的函数', async () => {

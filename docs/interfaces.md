@@ -362,7 +362,9 @@
     "output/compile_commands.json",
     "build/compile_commands.json"
   ],
-  "buildrootConfig": true
+  "buildrootConfig": true,
+  "maxWorkers": 0,
+  "indexer": "tree-sitter"
 }
 ```
 
@@ -373,6 +375,11 @@
 - `workerBatch`：每个 worker 线程每批处理的文件数
 - `compileCommandsPaths`：`compile_commands.json` 的候选搜索路径；支持相对路径（相对于项目根目录）和绝对路径
 - `buildrootConfig`：是否解析 `.config` 文件过滤未启用的 Buildroot 包目录
+- `maxWorkers`：worker 线程数上限（默认 `0` = 自动，取 `floor(cpus * 0.75)`）；设为正整数可手动指定
+- `indexer`：索引引擎，可选值：
+  - `"tree-sitter"`（默认）：多核并行，精确解析，支持 C/C++/TypeScript/Python
+  - `"ctags"`：使用 Universal Ctags，速度快，只建 symbols 表，不建 calls 表
+  - `"ctags+cscope"`：ctags 建 symbols + cscope 建 calls，速度快且支持调用链查询
 
 ---
 

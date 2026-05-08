@@ -312,6 +312,13 @@ class IndexBuilder {
 - worker 通过 `parentPort.close()` 优雅退出，禁止调用 `worker.terminate()`（强制终止会触发 tree-sitter Parser 析构函数在错误线程上下文执行，导致 Napi::Error 崩溃）
 - 主线程收到解析结果后批量写入（WAL 模式，batch transaction）
 - pipeline 设计：每个 worker 同时持有 2 个待处理批次，减少空闲等待
+- 线程数：默认 `floor(cpus * 0.75)`，可通过 `maxWorkers` 配置覆盖（0 = 自动）
+
+**轻量索引（ctags/cscope）**：
+- 当 `cfg.indexer` 为 `'ctags'` 或 `'ctags+cscope'` 时，`indexDirectory` 委托给 `lib/ctags-indexer.js`，不启动 worker 线程
+- `ctags`：调用 `ctags --output-format=json -R`，解析 JSON 输出写入 symbols 表，calls 表为空
+- `ctags+cscope`：ctags 建 symbols，再用 `cscope -b -R -q` 建库，对每个函数符号查询 callees（`cscope -d -L2`）写入 calls 表
+- 适用场景：大型 C 项目（如 Linux kernel）需要快速索引时，速度比 tree-sitter 快 10x+
 
 **构建系统过滤**：
 - 优先读 `compile_commands.json`（含 `output/compile_commands.json`）；路径支持绝对路径，可通过 `cfgOverride.compileCommandsPaths` 传入临时目录中生成的文件
@@ -926,7 +933,8 @@ class CrossRepoIndex {
 
 ### 9.1 索引构建优化
 
-- **多核并行**：`worker_threads` 并行 tree-sitter 解析，worker 数 = `min(CPU核数-1, 8)`
+- **多核并行**：`worker_threads` 并行 tree-sitter 解析，worker 数 = `floor(cpus * 0.75)`（可通过 `maxWorkers` 配置）
+- **轻量索引**：`indexer: "ctags+cscope"` 模式跳过 worker 线程，直接调用系统工具，适合大型 C 项目快速索引
 - **批量事务**：主线程每批结果一次性写入 SQLite（WAL 模式），避免逐行提交
 - **增量更新**：基于 SHA-256 哈希跳过未变更文件
 - **目录过滤**：`SKIP_DIRS` 跳过 `output`/`dl`/`node_modules`/`vendor` 等无效目录（可配置）
