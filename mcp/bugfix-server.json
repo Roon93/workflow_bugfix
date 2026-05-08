@@ -6,7 +6,7 @@
       "env": {},
       "tools": [
         {
-          "name": "workflow.init",
+          "name": "workflow:init",
           "description": "Initialize a new workflow",
           "inputSchema": {
             "type": "object",
@@ -19,12 +19,12 @@
           }
         },
         {
-          "name": "workflow.load",
+          "name": "workflow:load",
           "description": "Load current workflow state",
           "inputSchema": { "type": "object", "properties": {} }
         },
         {
-          "name": "workflow.advance",
+          "name": "workflow:advance",
           "description": "Advance to next phase",
           "inputSchema": {
             "type": "object",
@@ -36,7 +36,7 @@
           }
         },
         {
-          "name": "workflow.rollback",
+          "name": "workflow:rollback",
           "description": "Rollback to a checkpoint",
           "inputSchema": {
             "type": "object",
@@ -48,7 +48,7 @@
           }
         },
         {
-          "name": "log.parse",
+          "name": "log:parse",
           "description": "Parse log file",
           "inputSchema": {
             "type": "object",
@@ -59,7 +59,7 @@
           }
         },
         {
-          "name": "log.extract-clues",
+          "name": "log:extract-clues",
           "description": "Extract clues from log",
           "inputSchema": {
             "type": "object",
@@ -71,7 +71,7 @@
           }
         },
         {
-          "name": "index.build",
+          "name": "index:build",
           "description": "Build code index",
           "inputSchema": {
             "type": "object",
@@ -82,7 +82,7 @@
           }
         },
         {
-          "name": "index.search-files",
+          "name": "index:search-files",
           "description": "Search files by keywords",
           "inputSchema": {
             "type": "object",
@@ -96,7 +96,7 @@
           }
         },
         {
-          "name": "index.search-symbols",
+          "name": "index:search-symbols",
           "description": "Search symbols by name",
           "inputSchema": {
             "type": "object",
@@ -109,7 +109,7 @@
           }
         },
         {
-          "name": "index.trace-calls",
+          "name": "index:trace-calls",
           "description": "Trace call chains",
           "inputSchema": {
             "type": "object",
@@ -122,7 +122,7 @@
           }
         },
         {
-          "name": "index.analyze-impact",
+          "name": "index:analyze-impact",
           "description": "Analyze impact of changes",
           "inputSchema": {
             "type": "object",
@@ -134,7 +134,7 @@
           }
         },
         {
-          "name": "test.discover",
+          "name": "test:discover",
           "description": "Discover test frameworks and files",
           "inputSchema": {
             "type": "object",
@@ -145,7 +145,7 @@
           }
         },
         {
-          "name": "test.run",
+          "name": "test:run",
           "description": "Run tests",
           "inputSchema": {
             "type": "object",
@@ -159,7 +159,7 @@
           }
         },
         {
-          "name": "git.create-branch",
+          "name": "git:create-branch",
           "description": "Create branch in repos",
           "inputSchema": {
             "type": "object",
@@ -172,7 +172,7 @@
           }
         },
         {
-          "name": "git.commit",
+          "name": "git:commit",
           "description": "Commit changes in repos",
           "inputSchema": {
             "type": "object",
@@ -185,7 +185,7 @@
           }
         },
         {
-          "name": "git.tag-checkpoint",
+          "name": "git:tag-checkpoint",
           "description": "Create checkpoint tag",
           "inputSchema": {
             "type": "object",
@@ -198,7 +198,7 @@
           }
         },
         {
-          "name": "git.rewind",
+          "name": "git:rewind",
           "description": "Rewind to checkpoint",
           "inputSchema": {
             "type": "object",
@@ -210,12 +210,12 @@
           }
         },
         {
-          "name": "repo.list",
+          "name": "repo:list",
           "description": "List configured repos",
           "inputSchema": { "type": "object", "properties": {} }
         },
         {
-          "name": "repo.sync-branches",
+          "name": "repo:sync-branches",
           "description": "Sync branches across repos",
           "inputSchema": {
             "type": "object",
@@ -227,7 +227,7 @@
           }
         },
         {
-          "name": "repo.sync-commits",
+          "name": "repo:sync-commits",
           "description": "Sync commits across repos",
           "inputSchema": {
             "type": "object",

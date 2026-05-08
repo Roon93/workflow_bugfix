@@ -8,7 +8,97 @@ const { LogParser } = require('../lib/log-parser.js');
 const { ContextRetriever } = require('../lib/context-retriever.js');
 
 const args = process.argv.slice(2);
-const command = args[0];
+
+// MCP stdio server 模式：实现 JSON-RPC 2.0 over stdin/stdout
+if (args[0] === '--mcp') {
+  startMcpServer();
+} else {
+  runCli(args);
+}
+
+function startMcpServer() {
+  const readline = require('readline');
+  const rl = readline.createInterface({ input: process.stdin, terminal: false });
+
+  rl.on('line', async (line) => {
+    let req;
+    try { req = JSON.parse(line); } catch { return; }
+
+    const { id, method, params = {} } = req;
+
+    if (method === 'initialize') {
+      send({ jsonrpc: '2.0', id, result: {
+        protocolVersion: '2024-11-05',
+        capabilities: { tools: {} },
+        serverInfo: { name: 'bugfix', version: '0.1.0' }
+      }});
+      return;
+    }
+
+    if (method === 'tools/list') {
+      const tools = require('../mcp/bugfix-server.json').mcpServers.bugfix.tools;
+      send({ jsonrpc: '2.0', id, result: { tools } });
+      return;
+    }
+
+    if (method === 'tools/call') {
+      const { name, arguments: toolArgs = {} } = params;
+      try {
+        const result = await dispatchTool(name, toolArgs);
+        send({ jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] } });
+      } catch (err) {
+        send({ jsonrpc: '2.0', id, error: { code: -32000, message: err.message } });
+      }
+      return;
+    }
+
+    // notifications (no id) — ignore silently
+    if (id !== undefined) {
+      send({ jsonrpc: '2.0', id, error: { code: -32601, message: `Method not found: ${method}` } });
+    }
+  });
+
+  function send(obj) {
+    process.stdout.write(JSON.stringify(obj) + '\n');
+  }
+}
+
+async function dispatchTool(name, a) {
+  switch (name) {
+    case 'workflow:init': { const sm = new StateManager(); return sm.init(a.workflowId, a.type, a.repos || []); }
+    case 'workflow:load': { const sm = new StateManager(); return sm.load(); }
+    case 'workflow:advance': { const sm = new StateManager(); return sm.advance(a.phase, a.checkpoint !== false); }
+    case 'workflow:rollback': { const sm = new StateManager(); return sm.rollback(a.phase, a.checkpointTag); }
+    case 'log:parse': { const lp = new LogParser(); return lp.parse(a.logFile, { maxErrorSamples: a.maxErrorSamples || 20 }); }
+    case 'log:extract-clues': { const lp = new LogParser(); return lp.extractClues(a.logFile, a.keywords || []); }
+    case 'index:build': {
+      const db = new IndexBuilder('.bugfix/index.db');
+      for (const repo of (a.repos || ['./'])) db.indexDirectory(repo, repo);
+      const stats = db.db.prepare('SELECT COUNT(*) as n FROM files').get();
+      const syms = db.db.prepare('SELECT COUNT(*) as n FROM symbols').get();
+      const calls = db.db.prepare('SELECT COUNT(*) as n FROM calls').get();
+      db.close();
+      return { success: true, stats: { filesIndexed: stats.n, symbolsIndexed: syms.n, callsIndexed: calls.n } };
+    }
+    case 'index:search-files': { const db = new IndexBuilder('.bugfix/index.db'); const r = db.searchFiles(a.keywords, a.repos, a.language, a.maxResults); db.close(); return { files: r }; }
+    case 'index:search-symbols': { const db = new IndexBuilder('.bugfix/index.db'); const r = db.searchSymbols(a.name, a.type, a.repos); db.close(); return { symbols: r }; }
+    case 'index:trace-calls': { const db = new IndexBuilder('.bugfix/index.db'); const r = db.traceCalls(a.symbol, a.direction, a.maxDepth); db.close(); return { callChain: r }; }
+    case 'index:analyze-impact': { const db = new IndexBuilder('.bugfix/index.db'); const r = db.analyzeImpact(a.files, a.symbols); db.close(); return r; }
+    case 'test:discover': { const tr = new TestRunner(); return tr.discover(a.repos || ['./'], a.languages || []); }
+    case 'test:run': { const tr = new TestRunner(); return tr.run(a.testFile, a.testName, a.framework, a.timeout); }
+    case 'git:create-branch': { const g = new GitOps(); return g.createBranch(a.branchName, a.repos || ['./'], a.baseBranch); }
+    case 'git:commit': { const g = new GitOps(); return g.commit(a.message, a.files, a.repos || ['./']); }
+    case 'git:tag-checkpoint': { const g = new GitOps(); return g.tagCheckpoint(a.tag, a.message, a.repos || ['./']); }
+    case 'git:rewind': { const g = new GitOps(); return g.rewind(a.checkpointTag, a.repos || ['./']); }
+    case 'repo:list': { const rm = new RepoManager(); return rm.list(); }
+    case 'repo:sync-branches': { const rm = new RepoManager(); return rm.syncBranches(a.branchName, a.repos); }
+    case 'repo:sync-commits': { const rm = new RepoManager(); return rm.syncCommits(a.message, a.repos); }
+    default: throw new Error(`Unknown tool: ${name}`);
+  }
+}
+
+function runCli(args) {
+  const command = args[0];
 
 function output(result) {
   console.log(JSON.stringify(result, null, 2));
@@ -130,3 +220,4 @@ else {
   console.error('Usage: bugfix-cli <command> [args...]');
   process.exit(1);
 }
+} // end runCli
