@@ -75,13 +75,16 @@
 ## 工具依赖
 
 ### MCP 工具
-- **workflow.load**: 读取当前 workflow 状态
-- **workflow.advance**: 推进到下一阶段
-- **log.parse**: 解析日志文件，提取结构化信息
-- **log.extract-clues**: 从日志中提取关键线索（错误码、异常、模式）
+- **`workflow:load`**: 读取当前 workflow 状态
+- **`workflow:advance`**: 推进到下一阶段
+- **`log:extract-clues`**: 从日志中提取关键线索（错误码、异常、模式）
+  - 返回去重后的线索列表，不返回全量日志内容
+  - 日志文件较大时（> 1MB）必须通过 subagent 调用，见下方说明
+- **`log:parse`**: 仅用于获取日志摘要（总行数、错误数、前 20 条错误样本）
+  - 禁止在主 agent 中直接读取 `log:parse` 的原始输出用于推理，
+    大日志会撑爆上下文；需要深挖时交给 subagent
 
 ### 文件操作
-- 读取用户提供的日志文件
 - 写入 `state/analysis/confirmed.json`
 
 ## 工作流程
@@ -89,9 +92,12 @@
 ### Bug 分析流程
 
 1. **初步分析**
-   - 读取用户输入（现象 + 日志）
-   - 使用 `log:parse` 解析日志文件
-   - 使用 `log:extract-clues` 提取关键线索
+   - 读取用户输入（现象描述）
+   - 如果用户提供了日志文件：
+     - 检查文件大小；若 > 1MB，启动 subagent 专门处理日志，
+       主 agent 只接收 subagent 返回的线索摘要
+     - 否则直接调用 `log:extract-clues` 获取线索列表
+   - 不要在主 agent 中直接处理日志全文
 
 2. **生成假设**
    - 基于线索生成根因假设（3-5 个）
