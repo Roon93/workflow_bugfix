@@ -20,8 +20,8 @@
 
 ## 工具依赖
 
-- `test.run` - 执行测试
-- `git.commit` - 提交修复代码
+- `test:run` - 执行测试
+- `git:commit` - 提交修复代码
 - `Read` / `Edit` - 读写代码文件
 
 ## TDD Loop 逻辑

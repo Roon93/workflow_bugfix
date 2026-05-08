@@ -24,7 +24,7 @@
 ```
 
 ## 执行逻辑
-1. 调用 `index.analyze-impact` 分析影响面
+1. 调用 `index:analyze-impact` 分析影响面
 2. 根据调用链深度和模块数量评估风险等级：
    - low: 影响 ≤ 2 个模块
    - medium: 影响 3-5 个模块
@@ -32,5 +32,4 @@
 3. 返回结构化数据
 
 ## 工具依赖
-- `index.analyze-impact` - 影响面分析
-- `index.query-callgraph` - 调用图查询
+- `index:analyze-impact` - 影响面分析（含调用链查询）

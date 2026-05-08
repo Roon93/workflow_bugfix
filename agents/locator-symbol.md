@@ -26,12 +26,12 @@
 ```
 
 ## 工具依赖
-- `index.search-symbols` - 符号名检索
+- `index:search-symbols` - 符号名检索
 
 ## 执行逻辑
 
 ### 1. 候选符号检索
-对每个 `candidateSymbol` 调用 `index.search-symbols`：
+对每个 `candidateSymbol` 调用 `index:search-symbols`：
 ```json
 {
   "symbol": "usb_alloc_buffer",

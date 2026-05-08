@@ -29,13 +29,13 @@
 ```
 
 ## 工具依赖
-- `index.trace-calls` - 调用链追踪
-- `index.analyze-impact` - 影响面分析
+- `index:trace-calls` - 调用链追踪
+- `index:analyze-impact` - 影响面分析
 
 ## 执行逻辑
 
 ### 1. 调用链追踪
-对每个 `candidateSymbol` 调用 `index.trace-calls`：
+对每个 `candidateSymbol` 调用 `index:trace-calls`：
 ```json
 {
   "symbol": "usb_alloc_buffer",
@@ -45,7 +45,7 @@
 ```
 
 ### 2. 影响面分析
-对每个 `candidateSymbol` 调用 `index.analyze-impact`：
+对每个 `candidateSymbol` 调用 `index:analyze-impact`：
 ```json
 {
   "symbol": "usb_alloc_buffer",

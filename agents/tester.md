@@ -170,13 +170,13 @@ TEST(UsbDriver, MemoryLeakOnErrorPath) {
 ## 工作流程
 
 1. **读取输入**：加载 `state/analysis/confirmed.json` 和 `state/context/scope.json`
-2. **发现测试框架**：调用 `test.discover` 确定测试工具
+2. **发现测试框架**：调用 `test:discover` 确定测试工具
 3. **选择复现策略**：根据 `reproduceStrategy` 选择 Level 1/2/3
 4. **编写测试**：
    - 参考现有测试风格
    - 使用项目测试框架
    - 添加清晰的注释说明复现逻辑
-5. **执行测试**：调用 `test.run` 验证测试失败
+5. **执行测试**：调用 `test:run` 验证测试失败
 6. **记录结果**：写入 `state/reproduce/test-result.json`
 7. **交付**：通过 TestHandoff 传递给 fixer agent
 

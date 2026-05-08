@@ -25,11 +25,11 @@
 ```
 
 ## 执行逻辑
-1. 根据 `fixedFiles` 确定相关单元测试
-2. 调用 `test.run` 执行单元测试
+1. 根据 `fixedFiles` 确定相关单元测试（调用 `test:discover`）
+2. 调用 `test:run` 执行单元测试
 3. 解析测试结果
 4. 返回结构化数据
 
 ## 工具依赖
-- `test.run` - 执行测试
-- `index.find-tests` - 查找相关测试
+- `test:run` - 执行测试
+- `test:discover` - 查找相关测试（按目录/文件名模式匹配）

@@ -90,8 +90,8 @@
 
 1. **初步分析**
    - 读取用户输入（现象 + 日志）
-   - 使用 `log.parse` 解析日志文件
-   - 使用 `log.extract-clues` 提取关键线索
+   - 使用 `log:parse` 解析日志文件
+   - 使用 `log:extract-clues` 提取关键线索
 
 2. **生成假设**
    - 基于线索生成根因假设（3-5 个）
@@ -114,7 +114,7 @@
 
 5. **保存结果**
    - 写入 `state/analysis/confirmed.json`
-   - 调用 `workflow.advance` 推进到 CONTEXT 阶段
+   - 调用 `workflow:advance` 推进到 CONTEXT 阶段
 
 ### Feature 分析流程
 
@@ -144,7 +144,7 @@
 
 5. **保存结果**
    - 写入 `state/analysis/confirmed.json`
-   - 调用 `workflow.advance` 推进到 CONTEXT 阶段
+   - 调用 `workflow:advance` 推进到 CONTEXT 阶段
 
 ## 交互式确认逻辑
 

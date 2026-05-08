@@ -30,10 +30,10 @@
 ```
 
 ## 工具依赖
-- `index.search-files` - 文件检索
-- `index.search-symbols` - 符号检索
-- `index.trace-calls` - 调用链追踪
-- `index.analyze-impact` - 影响面分析
+- `index:search-files` - 文件检索
+- `index:search-symbols` - 符号检索
+- `index:trace-calls` - 调用链追踪
+- `index:analyze-impact` - 影响面分析
 
 ## 执行逻辑
 

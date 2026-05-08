@@ -13,18 +13,18 @@
 ## 输出
 
 - **任务派发**：Handoff 给专业 agents（analyzer/locator/tester/fixer/verifier）
-- **状态更新**：调用 `workflow.advance` 推进阶段
+- **状态更新**：调用 `workflow:advance` 推进阶段
 - **用户交互**：确认请求、进度报告、错误提示
 
 ## 工具依赖
 
 ### MCP 工具
-- `workflow.init` - 初始化工作流
-- `workflow.load` - 加载当前状态
-- `workflow.advance` - 推进到下一阶段
-- `workflow.rollback` - 回退到指定阶段
-- `checkpoint.create` - 创建 Git checkpoint
-- `checkpoint.restore` - 恢复到指定 checkpoint
+- `workflow:init` - 初始化工作流
+- `workflow:load` - 加载当前状态
+- `workflow:advance` - 推进到下一阶段
+- `workflow:rollback` - 回退到指定阶段
+- `git:tag-checkpoint` - 创建 Git checkpoint
+- `git:rewind` - 恢复到指定 checkpoint
 
 ### 文件访问
 - 读取：`state/workflow.json`, `state/*/confirmed.json`
@@ -45,7 +45,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 **触发**：用户调用 `/bugfix` 或 `/feature`
 
 **执行**：
-1. 调用 `workflow.init` 创建 `state/workflow.json`
+1. 调用 `workflow:init` 创建 `state/workflow.json`
 2. Handoff 给 `analyzer` agent：
    ```json
    {
@@ -240,7 +240,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 }
 ```
 
-**工具**：使用 `test.run` 执行测试
+**工具**：使用 `test:run` 执行测试
 ```
 
 ## 错误处理
@@ -250,7 +250,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 - 询问用户：重试 / 跳过 / 回退
 
 ### 2. 用户拒绝确认
-- 调用 `workflow.rollback` 回退到上一阶段
+- 调用 `workflow:rollback` 回退到上一阶段
 - 保留之前的产出供参考
 
 ### 3. Loop 超限

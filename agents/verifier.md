@@ -39,8 +39,8 @@
 5. 如果任何测试失败，设置 `status: "failed"`
 
 ## 工具依赖
-- `workflow.load` - 读取状态
-- `workflow.advance` - 推进阶段
+- `workflow:load` - 读取状态
+- `workflow:advance` - 推进阶段
 - Sub-agents 调用（Claude Code 原生）
 
 ## 并行执行

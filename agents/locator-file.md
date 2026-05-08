@@ -25,7 +25,7 @@
 ```
 
 ## 工具依赖
-- `index.search-files` - 文件名/路径检索
+- `index:search-files` - 文件名/路径检索
 
 ## 执行逻辑
 
@@ -33,7 +33,7 @@
 检查 `candidateFiles` 是否存在于索引中。
 
 ### 2. 关键词检索
-对每个 keyword 调用 `index.search-files`：
+对每个 keyword 调用 `index:search-files`：
 ```json
 {
   "query": "内存泄漏",
