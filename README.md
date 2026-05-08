@@ -43,9 +43,9 @@ claude --plugin-dir /path/to/workflow_bugfix chat
 然后使用技能：
 
 ```bash
-/workflow_bugfix:bugfix    # 启动 bug 修复工作流
-/workflow_bugfix:feature   # 启动功能开发工作流
-/workflow_bugfix:status    # 查看工作流状态
+/bugfix    # 启动 bug 修复工作流
+/feature   # 启动功能开发工作流
+/status    # 查看工作流状态
 ```
 
 ### 作为独立 CLI 使用

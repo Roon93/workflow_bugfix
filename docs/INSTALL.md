@@ -78,12 +78,12 @@ claude --plugin-dir /path/to/workflow_bugfix chat
 然后在 Claude Code 中使用：
 
 ```bash
-/workflow_bugfix:bugfix    # 启动 bug 修复工作流
-/workflow_bugfix:feature   # 启动功能开发工作流
-/workflow_bugfix:status    # 查看工作流状态
-/workflow_bugfix:resume    # 恢复工作流
-/workflow_bugfix:rewind    # 回退到检查点
-/workflow_bugfix:rebuild-index  # 重建代码索引
+/bugfix          # 启动 bug 修复工作流
+/feature         # 启动功能开发工作流
+/status          # 查看工作流状态
+/resume          # 恢复工作流
+/rewind          # 回退到检查点
+/rebuild-index   # 重建代码索引
 ```
 
 ### 方式 2：作为独立 CLI 工具
@@ -108,12 +108,12 @@ claude --plugin-dir /path/to/workflow_bugfix -p "list available skills"
 ```
 
 应该看到：
-- `workflow_bugfix:bugfix` - 启动 bug 修复工作流
-- `workflow_bugfix:feature` - 启动功能开发工作流
-- `workflow_bugfix:status` - 查看工作流状态
-- `workflow_bugfix:resume` - 恢复工作流
-- `workflow_bugfix:rewind` - 回退工作流
-- `workflow_bugfix:rebuild-index` - 重建索引
+- `bugfix` - 启动 bug 修复工作流
+- `feature` - 启动功能开发工作流
+- `status` - 查看工作流状态
+- `resume` - 恢复工作流
+- `rewind` - 回退工作流
+- `rebuild-index` - 重建索引
 
 ## 目录结构
 

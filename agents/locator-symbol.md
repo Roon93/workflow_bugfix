@@ -34,7 +34,7 @@
 对每个 `candidateSymbol` 调用 `index:search-symbols`：
 ```json
 {
-  "symbol": "usb_alloc_buffer",
+  "name": "usb_alloc_buffer",
   "type": "function"
 }
 ```

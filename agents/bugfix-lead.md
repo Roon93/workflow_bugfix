@@ -58,7 +58,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 3. 等待 analyzer 返回结构化分析
 4. 展示分析结果，请求用户确认
 5. 用户确认后，写入 `state/analysis/confirmed.json`
-6. 调用 `workflow.advance("CONTEXT")`
+6. 调用 `workflow:advance("CONTEXT")`
 
 ### 2. 上下文定位（Phase 2: CONTEXT）
 
@@ -75,7 +75,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 3. 展示定位结果（文件、符号、调用链）
 4. 请求用户确认范围
 5. 用户确认后，写入 `state/context/confirmed.json`
-6. 调用 `workflow.advance("TEST")`
+6. 调用 `workflow:advance("TEST")`
 
 ### 3. 复现测试（Phase 3: TEST）
 
@@ -94,7 +94,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 4. **验证**：测试必须失败（符合预期）
 5. 如果测试通过（不符合预期），报错并回退
 6. 测试失败后，写入 `state/reproduce/test-result.json`
-7. 调用 `workflow.advance("ACCEPTANCE")`
+7. 调用 `workflow:advance("ACCEPTANCE")`
 
 ### 4. 验收标准（Phase 4: ACCEPTANCE）
 
@@ -106,7 +106,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 3. 展示验收标准，请求用户确认
 4. 用户确认后，写入 `state/acceptance/confirmed.json`
 5. 调用 `checkpoint.create("before-fix")`
-6. 调用 `workflow.advance("FIX")`
+6. 调用 `workflow:advance("FIX")`
 
 ### 5. 修复实现（Phase 5: FIX）
 
@@ -134,7 +134,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 6. 测试通过后：
    - 写入 `state/fix/success.json`
    - 调用 `checkpoint.create("after-fix")`
-   - 调用 `workflow.advance("VERIFY")`
+   - 调用 `workflow:advance("VERIFY")`
 
 ### 6. 回归验证（Phase 6: VERIFY）
 
@@ -156,7 +156,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
    - 询问用户：回退 / 修复回归 / 接受风险
 6. 无回归后：
    - 写入 `state/verify/report.json`
-   - 调用 `workflow.advance("OUTPUT")`
+   - 调用 `workflow:advance("OUTPUT")`
 
 ### 7. 输出报告（Phase 7: OUTPUT）
 
@@ -170,7 +170,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
    - 影响面分析
    - 验收确认
 3. 生成 `state/result.json`（结构化输出）
-4. 调用 `workflow.advance("completed")`
+4. 调用 `workflow:advance("completed")`
 5. 展示报告摘要
 
 ## Handoff 构建示例
@@ -268,7 +268,7 @@ ANALYSIS → CONTEXT → TEST → ACCEPTANCE → FIX → VERIFY → OUTPUT
 ### 恢复中断的工作流
 
 ```javascript
-const state = await workflow.load();
+const state = await workflow:load();
 switch (state.currentPhase) {
   case "ANALYSIS":
     if (state.phases.ANALYSIS.status === "completed") {

@@ -36,8 +36,8 @@
 对每个 keyword 调用 `index:search-files`：
 ```json
 {
-  "query": "内存泄漏",
-  "limit": 20
+  "keywords": ["内存泄漏"],
+  "maxResults": 20
 }
 ```
 
