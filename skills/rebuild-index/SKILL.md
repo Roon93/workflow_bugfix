@@ -10,21 +10,21 @@ Rebuild the SQLite code index for symbol search, call tracing, and impact analys
 
 ## Steps
 
-1. **Initialize index database**
-   - Create/recreate `.bugfix/index.db`
-   - Initialize schema (files, symbols, calls, dependencies, tests)
+1. **Call `index.build` MCP tool** to rebuild the index:
+   ```
+   index.build({ repos: [<current repo path>], incremental: false })
+   ```
+   This tool runs via Node.js (`bin/bugfix-cli`) and uses the bundled
+   tree-sitter Node bindings. Do NOT use Bash, Python, or any other
+   method to parse source files — only call the MCP tool.
 
-2. **Scan codebase**
-   - Find all source files
-   - Parse with Tree-sitter
-   - Extract symbols (functions, classes, variables)
-   - Build call graph
-
-3. **Store results**
-   - Insert into SQLite database
-   - Create indexes for fast lookup
-
-4. **Output**
-   - File count
+2. **Report results** from the tool response:
+   - File count indexed
    - Symbol count
    - Call relationship count
+
+## Important
+
+Always use the `index.build` MCP tool. Never run `python`, `pip install tree-sitter`,
+or any shell command to parse code. The tree-sitter parsing is handled entirely
+by the Node.js MCP server.

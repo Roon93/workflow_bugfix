@@ -21,7 +21,7 @@ mkdir -p "$OUTPUT_DIR"
 
 # 写入临时 Dockerfile
 DOCKERFILE=$(mktemp)
-trap 'rm -f "$DOCKERFILE"' EXIT
+trap 'rm -f "$DOCKERFILE" "$CONTAINER_SCRIPT"' EXIT
 
 cat > "$DOCKERFILE" <<'DOCKERFILE_EOF'
 FROM ubuntu:20.04
@@ -45,20 +45,10 @@ RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-l
 WORKDIR /build
 DOCKERFILE_EOF
 
-echo "==> 构建 Docker 镜像 (Ubuntu 20.04 + GCC 9 + Node v${NODE_VERSION})..."
-docker build \
-    --build-arg NODE_VERSION="$NODE_VERSION" \
-    -f "$DOCKERFILE" \
-    -t "$IMAGE_NAME" \
-    "$SCRIPT_DIR" \
-    --quiet
-
-echo "==> 在容器中重新编译原生模块..."
-docker run --rm \
-    -v "$SCRIPT_DIR:/build:ro" \
-    -v "$OUTPUT_DIR:/output" \
-    "$IMAGE_NAME" \
-    bash -c '
+# 写入容器内执行脚本（独立文件，避免 bash -c 单引号内嵌套 heredoc 的解析问题）
+CONTAINER_SCRIPT=$(mktemp /tmp/container-build-XXXXXX.sh)
+cat > "$CONTAINER_SCRIPT" <<'CONTAINER_EOF'
+#!/usr/bin/env bash
 set -euo pipefail
 
 echo "--> 复制项目到工作目录..."
@@ -78,6 +68,11 @@ for pkg in tree-sitter tree-sitter-c tree-sitter-cpp tree-sitter-python tree-sit
     npx node-gyp rebuild 2>&1 | tail -3
     mkdir -p prebuilds/linux-x64
     cp build/Release/*.node prebuilds/linux-x64/
+    # tree-sitter-typescript 的 target_name 是 tree_sitter_typescript_binding，
+    # node-gyp-build 按包名查找，需要额外提供正确文件名
+    if [ "$pkg" = "tree-sitter-typescript" ]; then
+        cp build/Release/tree_sitter_typescript_binding.node prebuilds/linux-x64/tree-sitter-typescript.node
+    fi
     echo "    OK: $(ls prebuilds/linux-x64/*.node)"
 done
 
@@ -91,15 +86,24 @@ echo "--> 验证编译产物 glibc 依赖..."
 for f in \
     /work/node_modules/tree-sitter/prebuilds/linux-x64/tree-sitter.node \
     /work/node_modules/tree-sitter-c/prebuilds/linux-x64/tree-sitter-c.node \
+    /work/node_modules/tree-sitter-cpp/prebuilds/linux-x64/tree-sitter-cpp.node \
+    /work/node_modules/tree-sitter-python/prebuilds/linux-x64/tree-sitter-python.node \
+    /work/node_modules/tree-sitter-typescript/prebuilds/linux-x64/tree-sitter-typescript.node \
     /work/node_modules/better-sqlite3/build/Release/better_sqlite3.node; do
     max_glibc=$(objdump -p "$f" 2>/dev/null | grep "GLIBC_" | grep -v "GLIBCXX\|CXXABI" | grep -oP "GLIBC_\K[\d.]+" | sort -V | tail -1)
     max_glibcxx=$(objdump -p "$f" 2>/dev/null | grep "GLIBCXX_" | grep -oP "GLIBCXX_\K[\d.]+" | sort -V | tail -1)
     echo "    $(basename $f): glibc>=${max_glibc} glibcxx>=${max_glibcxx}"
 done
 
+echo "--> 端到端验证：实际 require() 所有模块..."
+node /work/scripts/verify-modules.js
+
+echo "--> 验证 MCP server 启动..."
+cd /work
+timeout 5 node bin/bugfix-cli --help 2>&1 | head -3 || true
+
 echo "--> 打包完整项目..."
 cd /work
-# 排除不需要的文件
 tar -czf /output/workflow_bug-ubuntu20.tar.gz \
     --exclude=".git" \
     --exclude="dist" \
@@ -110,7 +114,23 @@ tar -czf /output/workflow_bug-ubuntu20.tar.gz \
     .
 
 echo "--> 打包完成: $(du -sh /output/workflow_bug-ubuntu20.tar.gz | cut -f1)"
-'
+CONTAINER_EOF
+
+echo "==> 构建 Docker 镜像 (Ubuntu 20.04 + GCC 9 + Node v${NODE_VERSION})..."
+docker build \
+    --build-arg NODE_VERSION="$NODE_VERSION" \
+    -f "$DOCKERFILE" \
+    -t "$IMAGE_NAME" \
+    "$SCRIPT_DIR" \
+    --quiet
+
+echo "==> 在容器中重新编译原生模块..."
+docker run --rm \
+    -v "$SCRIPT_DIR:/build:ro" \
+    -v "$OUTPUT_DIR:/output" \
+    -v "$CONTAINER_SCRIPT:/container-build.sh:ro" \
+    "$IMAGE_NAME" \
+    bash /container-build.sh
 
 echo ""
 echo "==> 构建成功！"
@@ -120,4 +140,4 @@ echo ""
 echo "目标机器部署步骤:"
 echo "  1. 将 $OUTPUT_FILE 传输到目标机器"
 echo "  2. tar -xzf workflow_bug-ubuntu20.tar.gz"
-echo "  3. cd workflow_bug && node -e \"require('./lib/index.js')\" # 验证"
+echo "  3. cd workflow_bug && node scripts/verify-modules.js  # 验证"
