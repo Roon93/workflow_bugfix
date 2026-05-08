@@ -371,7 +371,7 @@
 - `sourceExts`：索引的源文件扩展名
 - `maxFileSize`：单文件最大字节数，超过则跳过（默认 512KB）
 - `workerBatch`：每个 worker 线程每批处理的文件数
-- `compileCommandsPaths`：`compile_commands.json` 的候选搜索路径（相对于项目根目录）
+- `compileCommandsPaths`：`compile_commands.json` 的候选搜索路径；支持相对路径（相对于项目根目录）和绝对路径
 - `buildrootConfig`：是否解析 `.config` 文件过滤未启用的 Buildroot 包目录
 
 ---

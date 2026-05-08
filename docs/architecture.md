@@ -308,12 +308,13 @@ class IndexBuilder {
 
 **多核架构**：
 - `indexDirectory` 启动 `min(CPU核数-1, 8)` 个 worker 线程
-- worker 线程只做 tree-sitter 解析，不碰 SQLite
+- worker 线程只做 tree-sitter 解析，不碰 SQLite（`better-sqlite3` 原生模块仅在主线程加载，worker 加载会导致 SIGABRT）
+- worker 通过 `parentPort.close()` 优雅退出，禁止调用 `worker.terminate()`（强制终止会触发 tree-sitter Parser 析构函数在错误线程上下文执行，导致 Napi::Error 崩溃）
 - 主线程收到解析结果后批量写入（WAL 模式，batch transaction）
 - pipeline 设计：每个 worker 同时持有 2 个待处理批次，减少空闲等待
 
 **构建系统过滤**：
-- 优先读 `compile_commands.json`（含 `output/compile_commands.json`）
+- 优先读 `compile_commands.json`（含 `output/compile_commands.json`）；路径支持绝对路径，可通过 `cfgOverride.compileCommandsPaths` 传入临时目录中生成的文件
 - 其次 `CMakeLists.txt`，再次 `Makefile`/`.mk`
 - Buildroot 项目：解析 `.config` 过滤未启用包的 `package/` 子目录
 - 未参与编译的文件标记 `compiled=0`，符号搜索和调用链默认跳过
