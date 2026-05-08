@@ -98,7 +98,9 @@ workflow_bugfix/
 │   └── report.md.template             # 报告模板
 ├── lib/
 │   ├── state-manager.js               # 状态管理
-│   ├── index-builder.js               # 索引构建
+│   ├── index-builder.js               # 索引构建（多核 worker_threads）
+│   ├── index-config.js                # 索引配置加载（.bugfix/index-config.json）
+│   ├── makefile-parser.js             # 构建系统解析（compile_commands/CMake/Makefile/Buildroot）
 │   ├── repo-manager.js                # 多仓库管理
 │   ├── test-runner.js                 # 测试执行
 │   ├── git-ops.js                     # Git 操作
@@ -289,22 +291,32 @@ class StateManager {
 
 #### 4.2.2 index-builder.js
 ```javascript
-// 索引构建（基于 Tree-sitter）
+// 索引构建（基于 Tree-sitter + worker_threads 多核并行）
 class IndexBuilder {
-  build(repos, incremental)        // 构建索引
-  parseFile(filePath, language)    // Tree-sitter 解析
-  extractSymbols(tree)             // 提取符号
-  computeHash(symbol)              // 计算内容哈希（SHA-256）
-  searchFiles(query)               // 文件搜索
-  searchSymbols(query)             // 符号搜索
-  traceCalls(symbol, direction)    // 调用链追踪（caller/callee）
-  analyzeImpact(files)             // 影响面分析
-  computeBlastRadius(files, symbols) // 爆炸半径分析
-  findHubNodes(topN)               // 查找 hub 节点
-  findBridgeNodes(topN)            // 查找 bridge 节点
-  detectCommunities()              // 社区检测
+  constructor(dbPath, cfgOverride)     // cfgOverride 可覆盖配置项
+  indexDirectory(dirPath, repoRoot)    // 异步，多核并行解析，主线程批量写 SQLite
+  indexFile(filePath, repoRoot)        // 同步，单文件（不启 worker）
+  searchFiles(keywords, repos, lang, maxResults)
+  searchSymbols(name, type, repos, compiledOnly=true) // 默认只查编译文件
+  traceCalls(symbol, direction, maxDepth)  // 只查 compiled=1 的文件
+  analyzeImpact(files, symbols)
+  findHubNodes(topN)                   // 被调用最多的函数
+  findBridgeNodes(topN)                // 调用扇出最大的函数
+  close()
 }
 ```
+
+**多核架构**：
+- `indexDirectory` 启动 `min(CPU核数-1, 8)` 个 worker 线程
+- worker 线程只做 tree-sitter 解析，不碰 SQLite
+- 主线程收到解析结果后批量写入（WAL 模式，batch transaction）
+- pipeline 设计：每个 worker 同时持有 2 个待处理批次，减少空闲等待
+
+**构建系统过滤**：
+- 优先读 `compile_commands.json`（含 `output/compile_commands.json`）
+- 其次 `CMakeLists.txt`，再次 `Makefile`/`.mk`
+- Buildroot 项目：解析 `.config` 过滤未启用包的 `package/` 子目录
+- 未参与编译的文件标记 `compiled=0`，符号搜索和调用链默认跳过
 
 #### 4.2.3 repo-manager.js
 ```javascript
@@ -394,115 +406,42 @@ class ContextRetriever {
 }
 ```
 
-### 5.2 SQLite Schema
+### 5.2 SQLite Schema（实际实现）
 
 ```sql
--- 文件索引
 CREATE TABLE files (
-  id INTEGER PRIMARY KEY,
-  repo TEXT NOT NULL,
-  path TEXT NOT NULL,
-  language TEXT,
-  content_hash TEXT, -- SHA-256 哈希
-  last_modified INTEGER,
-  UNIQUE(repo, path)
+  path TEXT PRIMARY KEY,
+  hash TEXT NOT NULL,
+  language TEXT NOT NULL,
+  compiled INTEGER NOT NULL DEFAULT 1,  -- 1=参与编译, 0=未编译（不索引符号）
+  indexed_at INTEGER NOT NULL
 );
+CREATE INDEX idx_symbols_name ON symbols(name);
+CREATE INDEX idx_symbols_file ON symbols(file);
 
--- 符号索引
 CREATE TABLE symbols (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  type TEXT, -- function, class, struct, enum, etc.
-  file_id INTEGER,
-  line INTEGER,
-  content_hash TEXT, -- 符号内容哈希
-  FOREIGN KEY(file_id) REFERENCES files(id)
+  type TEXT NOT NULL,   -- function, method, class
+  file TEXT NOT NULL,
+  line INTEGER NOT NULL
 );
 
--- 符号引用
-CREATE TABLE symbol_refs (
-  id INTEGER PRIMARY KEY,
-  symbol_id INTEGER,
-  file_id INTEGER,
-  line INTEGER,
-  FOREIGN KEY(symbol_id) REFERENCES symbols(id),
-  FOREIGN KEY(file_id) REFERENCES files(id)
-);
-
--- 调用关系
 CREATE TABLE calls (
-  id INTEGER PRIMARY KEY,
-  caller_id INTEGER,
-  callee_id INTEGER,
-  file_id INTEGER,
-  line INTEGER,
-  FOREIGN KEY(caller_id) REFERENCES symbols(id),
-  FOREIGN KEY(callee_id) REFERENCES symbols(id),
-  FOREIGN KEY(file_id) REFERENCES files(id)
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  caller TEXT NOT NULL,
+  callee TEXT NOT NULL,
+  file TEXT NOT NULL,
+  line INTEGER NOT NULL
 );
-
--- 依赖关系
-CREATE TABLE dependencies (
-  id INTEGER PRIMARY KEY,
-  from_file_id INTEGER,
-  to_file_id INTEGER,
-  type TEXT, -- include, import, etc.
-  FOREIGN KEY(from_file_id) REFERENCES files(id),
-  FOREIGN KEY(to_file_id) REFERENCES files(id)
-);
-
--- 测试覆盖
-CREATE TABLE test_coverage (
-  id INTEGER PRIMARY KEY,
-  test_file_id INTEGER,
-  tested_file_id INTEGER,
-  tested_symbol_id INTEGER,
-  FOREIGN KEY(test_file_id) REFERENCES files(id),
-  FOREIGN KEY(tested_file_id) REFERENCES files(id),
-  FOREIGN KEY(tested_symbol_id) REFERENCES symbols(id)
-);
-
--- 爆炸半径缓存
-CREATE TABLE blast_radius_cache (
-  id INTEGER PRIMARY KEY,
-  file_path TEXT NOT NULL,
-  symbol_name TEXT,
-  radius_json TEXT, -- JSON: {callers, dependents, tests, riskScore}
-  computed_at INTEGER,
-  UNIQUE(file_path, symbol_name)
-);
-
--- 社区检测结果
-CREATE TABLE communities (
-  id INTEGER PRIMARY KEY,
-  symbol_id INTEGER,
-  community_id INTEGER,
-  FOREIGN KEY(symbol_id) REFERENCES symbols(id)
-);
-
--- 历史任务
-CREATE TABLE workflow_history (
-  id INTEGER PRIMARY KEY,
-  workflow_id TEXT NOT NULL,
-  type TEXT,
-  status TEXT,
-  created_at INTEGER,
-  completed_at INTEGER,
-  result_json TEXT
-);
-
--- 持久化记忆（可选，MVP 暂缓）
-CREATE TABLE memory_observations (
-  id INTEGER PRIMARY KEY,
-  type TEXT, -- bug_pattern, fix_strategy, code_convention, risk_area
-  content TEXT,
-  context_json TEXT,
-  validity_score REAL DEFAULT 1.0,
-  access_count INTEGER DEFAULT 0,
-  created_at INTEGER,
-  expires_at INTEGER
-);
+CREATE INDEX idx_calls_caller ON calls(caller);
+CREATE INDEX idx_calls_callee ON calls(callee);
 ```
+
+**`compiled` 列说明**：
+- `1`：文件出现在 `compile_commands.json`/`CMakeLists.txt`/`Makefile` 中，符号和调用链已索引
+- `0`：文件存在于源码树但未参与编译（如 Buildroot 中未启用包的源文件），只记录路径，不索引符号
+- 所有查询方法（`searchSymbols`、`traceCalls`、`analyzeImpact` 等）默认过滤 `compiled=1`，避免误判
 
 ## 6. 并发执行设计
 
@@ -986,15 +925,19 @@ class CrossRepoIndex {
 
 ### 9.1 索引构建优化
 
-- **增量更新**：基于 git diff 只更新变更文件
-- **并行扫描**：多仓库并行构建索引
-- **缓存策略**：符号定义缓存，避免重复解析
+- **多核并行**：`worker_threads` 并行 tree-sitter 解析，worker 数 = `min(CPU核数-1, 8)`
+- **批量事务**：主线程每批结果一次性写入 SQLite（WAL 模式），避免逐行提交
+- **增量更新**：基于 SHA-256 哈希跳过未变更文件
+- **目录过滤**：`SKIP_DIRS` 跳过 `output`/`dl`/`node_modules`/`vendor` 等无效目录（可配置）
+- **文件过滤**：512KB 大小限制 + 二进制文件检测（首 8KB 空字节探测）
+- **构建系统过滤**：只索引参与编译的文件，Buildroot 项目可减少 80%+ 的无效索引量
+- **预编译语句**：所有 SQLite 操作使用 `prepare()` 预编译，避免重复解析 SQL
 
 ### 9.2 上下文检索优化
 
 - **分层检索**：先文件级（快），再符号级（中），最后图谱级（慢）
 - **早停策略**：找到足够上下文即停止
-- **相关性排序**：优先返回最相关的结果
+- **compiled 过滤**：默认只查 `compiled=1` 的文件，减少噪音
 
 ### 9.3 测试执行优化
 

@@ -4,7 +4,7 @@
 
 ### 1.1 状态管理接口
 
-#### workflow.init
+#### workflow:init
 初始化新的 workflow。
 
 **输入**：
@@ -25,7 +25,7 @@
 }
 ```
 
-#### workflow.load
+#### workflow:load
 读取当前 workflow 状态。
 
 **输入**：
@@ -45,7 +45,7 @@
 }
 ```
 
-#### workflow.advance
+#### workflow:advance
 推进到下一阶段。
 
 **输入**：
@@ -66,7 +66,7 @@
 }
 ```
 
-#### workflow.rollback
+#### workflow:rollback
 回退到指定阶段。
 
 **输入**：
@@ -90,7 +90,7 @@
 
 ### 1.2 日志解析接口
 
-#### log.parse
+#### log:parse
 解析日志文件，返回摘要和错误样本。不返回全量条目，避免大日志撑爆 agent 上下文。
 
 **输入**：
@@ -123,7 +123,7 @@
 }
 ```
 
-#### log.extract-clues
+#### log:extract-clues
 从日志中提取关键线索。
 
 **输入**：
@@ -161,20 +161,14 @@
 
 ### 1.3 索引检索接口
 
-#### index.build
-构建代码索引。
+#### index:build
+构建代码索引。支持多核并行（worker_threads），自动识别构建系统过滤未编译文件。
 
 **输入**：
 ```json
 {
-  "repos": [
-    {
-      "name": "firmware-core",
-      "path": "./"
-    }
-  ],
-  "incremental": true,
-  "languages": ["c", "cpp"]
+  "repos": ["./"],
+  "incremental": true
 }
 ```
 
@@ -182,17 +176,20 @@
 ```json
 {
   "success": true,
-  "indexDb": ".bugfix/index.db",
   "stats": {
     "filesIndexed": 1234,
     "symbolsIndexed": 5678,
     "callsIndexed": 3456
-  },
-  "duration": 12.5
+  }
 }
 ```
 
-#### index.search-files
+**说明**：
+- 自动搜索 `compile_commands.json`（含 `output/compile_commands.json`）、`CMakeLists.txt`、`Makefile`
+- 未参与编译的文件记录路径但不索引符号（`compiled=0`），避免误判
+- 可通过 `.bugfix/index-config.json` 自定义跳过目录、文件大小限制等（见下方配置说明）
+
+#### index:search-files
 搜索相关文件。
 
 **输入**：
@@ -210,19 +207,16 @@
 {
   "files": [
     {
-      "repo": "firmware-core",
       "path": "src/data_processor.c",
-      "relevance": 0.95,
-      "matchedLines": [120, 125, 140],
-      "snippet": "void process_data() { ... malloc ... }"
+      "language": "c",
+      "compiled": 1
     }
-  ],
-  "totalMatches": 12
+  ]
 }
 ```
 
-#### index.search-symbols
-搜索符号（函数/类/结构体）。
+#### index:search-symbols
+搜索符号（函数/类/结构体）。默认只搜索参与编译的文件（`compiledOnly=true`）。
 
 **输入**：
 ```json
@@ -241,20 +235,13 @@
       "name": "process_data",
       "type": "function",
       "file": "src/data_processor.c",
-      "line": 120,
-      "signature": "void process_data(const char* input)",
-      "references": [
-        {
-          "file": "src/main.c",
-          "line": 45
-        }
-      ]
+      "line": 120
     }
   ]
 }
 ```
 
-#### index.trace-calls
+#### index:trace-calls
 追踪调用链。
 
 **输入**：
@@ -270,80 +257,33 @@
 ```json
 {
   "callChain": [
-    {
-      "depth": 0,
-      "symbol": "process_data",
-      "file": "src/data_processor.c",
-      "line": 120
-    },
-    {
-      "depth": 1,
-      "symbol": "handle_request",
-      "file": "src/handler.c",
-      "line": 56,
-      "relation": "caller"
-    },
-    {
-      "depth": 2,
-      "symbol": "main",
-      "file": "src/main.c",
-      "line": 45,
-      "relation": "caller"
-    }
+    { "from": "handle_request", "to": "process_data", "file": "src/handler.c", "line": 56, "direction": "caller" },
+    { "from": "main", "to": "handle_request", "file": "src/main.c", "line": 45, "direction": "caller" }
   ]
 }
 ```
 
-#### index.analyze-impact
-分析影响面（增强版：包含爆炸半径）。
+#### index:analyze-impact
+分析影响面。
 
 **输入**：
 ```json
 {
   "files": ["src/data_processor.c"],
-  "symbols": ["process_data"],
-  "includeBlastRadius": true
+  "symbols": ["process_data"]
 }
 ```
 
 **输出**：
 ```json
 {
-  "impactScope": {
-    "affectedFiles": 5,
-    "affectedSymbols": 12,
-    "affectedTests": 3,
-    "riskLevel": "medium"
-  },
-  "blastRadius": {
-    "directCallers": [
-      {"symbol": "handle_request", "file": "src/handler.c", "line": 56}
-    ],
-    "indirectCallers": [
-      {"symbol": "main", "file": "src/main.c", "line": 45, "depth": 2}
-    ],
-    "dependents": [
-      {"file": "src/utils.c", "reason": "includes data_processor.h"}
-    ],
-    "relatedTests": [
-      {"file": "test/test_processor.cpp", "coverage": "direct"}
-    ],
-    "riskScore": 0.65,
-    "riskFactors": [
-      "High caller count (12)",
-      "Low test coverage (3 tests)",
-      "Bridge node (betweenness: 0.45)"
-    ]
-  },
-  "details": {
-    "directDependencies": ["src/handler.c", "src/main.c"],
-    "indirectDependencies": ["src/utils.c"],
-    "relatedTests": ["test/test_processor.cpp"]
-  }
+  "affectedFiles": ["src/data_processor.c", "src/handler.c"],
+  "affectedSymbols": ["process_data", "handle_request"],
+  "riskLevel": "medium"
 }
 ```
 
-#### index.find-hubs
+#### index:find-hubs
 查找 hub 节点（高连接度节点）。
 
 **输入**：
@@ -372,7 +312,7 @@
 }
 ```
 
-#### index.find-bridges
+#### index:find-bridges
 查找 bridge 节点（高 betweenness centrality）。
 
 **输入**：
@@ -400,41 +340,45 @@
 ```
 
 #### index.detect-communities
-检测代码社区（模块聚类）。
+（未实现，预留接口）
 
-**输入**：
+---
+
+### 1.3.1 索引配置文件
+
+路径：`.bugfix/index-config.json`（可选，不存在时使用默认值）
+
 ```json
 {
-  "algorithm": "louvain | label_propagation"
-}
-```
-
-**输出**：
-```json
-{
-  "communities": [
-    {
-      "id": 1,
-      "size": 25,
-      "files": ["src/network/*.c"],
-      "description": "Network module"
-    },
-    {
-      "id": 2,
-      "size": 18,
-      "files": ["src/storage/*.c"],
-      "description": "Storage module"
-    }
+  "skipDirs": [
+    ".git", "node_modules", "output", "dl", "host", "staging", "per-package",
+    "build", "dist", "vendor", "third_party", "__pycache__", "CMakeFiles"
   ],
-  "modularity": 0.72
+  "sourceExts": [".c", ".h", ".cpp", ".cc", ".cxx", ".hpp", ".ts", ".tsx", ".js", ".py"],
+  "maxFileSize": 524288,
+  "workerBatch": 50,
+  "compileCommandsPaths": [
+    "compile_commands.json",
+    "output/compile_commands.json",
+    "build/compile_commands.json"
+  ],
+  "buildrootConfig": true
 }
 ```
+
+**字段说明**：
+- `skipDirs`：跳过的目录名（精确匹配目录名，不是路径）。Buildroot 项目默认跳过 `output`/`dl`/`host`/`staging`/`per-package`
+- `sourceExts`：索引的源文件扩展名
+- `maxFileSize`：单文件最大字节数，超过则跳过（默认 512KB）
+- `workerBatch`：每个 worker 线程每批处理的文件数
+- `compileCommandsPaths`：`compile_commands.json` 的候选搜索路径（相对于项目根目录）
+- `buildrootConfig`：是否解析 `.config` 文件过滤未启用的 Buildroot 包目录
 
 ---
 
 ### 1.4 测试执行接口
 
-#### test.discover
+#### test:discover
 发现测试框架和测试文件。
 
 **输入**：
@@ -466,7 +410,7 @@
 }
 ```
 
-#### test.run
+#### test:run
 运行测试。
 
 **输入**：
@@ -502,7 +446,7 @@
 }
 ```
 
-#### test.parse-result
+#### test:parse-result
 解析测试结果。
 
 **输入**：
@@ -537,7 +481,7 @@
 
 ### 1.5 Git 操作接口
 
-#### git.create-branch
+#### git:create-branch
 创建分支（多仓库同步）。
 
 **输入**：
@@ -568,7 +512,7 @@
 }
 ```
 
-#### git.commit
+#### git:commit
 提交代码（多仓库同步）。
 
 **输入**：
@@ -595,7 +539,7 @@
 }
 ```
 
-#### git.tag-checkpoint
+#### git:tag-checkpoint
 创建 checkpoint 标签。
 
 **输入**：
@@ -626,7 +570,7 @@
 }
 ```
 
-#### git.rewind
+#### git:rewind
 回退到指定 checkpoint。
 
 **输入**：
@@ -660,7 +604,7 @@
 
 ### 1.6 多仓库管理接口
 
-#### repo.list
+#### repo:list
 列出所有仓库。
 
 **输入**：
@@ -688,7 +632,7 @@
 }
 ```
 
-#### repo.sync-branches
+#### repo:sync-branches
 同步创建分支。
 
 **输入**：
@@ -708,7 +652,7 @@
 }
 ```
 
-#### repo.sync-commits
+#### repo:sync-commits
 同步提交。
 
 **输入**：
