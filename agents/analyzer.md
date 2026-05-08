@@ -228,6 +228,5 @@
 
 ## 参考文档
 
-- [architecture.md](/home/roon/code_work/workflow_bug/architecture.md) - Analyzer Agent 定义
-- [spec.md](/home/roon/code_work/workflow_bug/spec.md) - 输入分析阶段详细说明
-- [interfaces.md](/home/roon/code_work/workflow_bug/interfaces.md) - AnalysisHandoff 接口定义
+- [architecture.md](../docs/architecture.md) - Analyzer Agent 定义
+- [interfaces.md](../docs/interfaces.md) - AnalysisHandoff 接口定义

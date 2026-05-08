@@ -10,9 +10,9 @@ Rebuild the SQLite code index for symbol search, call tracing, and impact analys
 
 ## Steps
 
-1. **Call `index.build` MCP tool** to rebuild the index:
+1. **Call `index:build` MCP tool** to rebuild the index:
    ```
-   index.build({ repos: [<current repo path>], incremental: false })
+   index:build({ repos: [<current repo path>], incremental: false })
    ```
    This tool runs via Node.js (`bin/bugfix-cli`) and uses the bundled
    tree-sitter Node bindings. Do NOT use Bash, Python, or any other
@@ -25,6 +25,6 @@ Rebuild the SQLite code index for symbol search, call tracing, and impact analys
 
 ## Important
 
-Always use the `index.build` MCP tool. Never run `python`, `pip install tree-sitter`,
+Always use the `index:build` MCP tool. Never run `python`, `pip install tree-sitter`,
 or any shell command to parse code. The tree-sitter parsing is handled entirely
 by the Node.js MCP server.
